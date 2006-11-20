@@ -1,0 +1,355 @@
+% Preamble
+\documentclass{article}
+
+\title{Grayscale image segmentation using reversible jump MCMC. Intermediate report.}
+\author{Pavel Senin}
+\date{\today}
+
+% Document
+\begin{document}
+% create title page and toc
+\maketitle
+\clearpage
+\tableofcontents
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% start text here!!
+\section{Introduction}
+
+I have chosen project aiming working software piece that employs Reversible Jump MCMC approach. The reason to chose Reversible Jump is because this approach in my opinion mimics ntural human ability to segment images that are noizy or have very little features to do segmentation exactly. Basically this method search within the multidimentional variants space trying to maximize classes separation. The approach itself seems to be havyweight and computationally costly, but second reason to choose this way is my own interest in understanding of unsupervised learning and ICA. 
+
+In my view, resulting software would accept any image as input data and will produce segmented image as output logging on fly all found specificity of the provided image itself. This report will narrow to detailed model description, the algorithm moves description and detailed description of each methods used. As the supplementary materials produced R code will be placed along with segmentation results and performance benchmarking.
+
+R (or 'GNU S'), a freely available language and environment for statistical computing and graphics was chosen as the programming environment. So far I've started a little coding and able to load and save images, extract raster information as a numerical matrix with intensity value for each of the pixels. I did code for the image segmentation using hardcoded Gaussian parameters (Move 1 of following algorithm). The main issues for now are functions for building sampling distributions and sampling itself along with simulated annealing method implementation.
+
+As I mentioned in project proposal, I found available for benchmarking images but in this case it would be hard to estimate performance due to working in R, most of benchmarking results are found for C/C++ compiled code.
+
+Fo the last month of this semester I will try to finish my coding along with the rest of the model description. For my class presentation I would like to choose to present simulated annealing method because of it's crucial role for optimization in the segmentation algorithm.
+
+Rest of this report is just very first draft for my workflow and it's background.
+
+\section{Model description}
+\subsection{Model build}
+The model itself is built according to (NEED CITATION, Kato,99).
+Let's suppose that the observed image is:
+$\textsl{F} = \left\{ \vec{f}_{s} \left| s \in \textsl{S}, \forall i : 0 < \vec{f}^{i}_{s} < 1 \right. \right\}$,
+where vector $\vec{f}_{s}$ is vector that carried intensity of colour for pixel s. The segmentation itself is just labeling of each pixel $s \in S$ by label $\omega_{s} \in \Lambda = \left\{ 1,2,...,L \right\}$. $\omega\in\Omega$ denotes a labeling (or segmentation), $\Omega$ is a set of all possible labeling.
+
+We regard our image as a sample drawn from unknown Gaussian mixture distribution. The goal of our analysis is inference about the number 
+$\textsl{L}$ 
+components:
+
+- the component parameter $\Theta = \left\{\forall\lambda : 1\leq \lambda \leq \textsl{L}, \Theta_{\lambda}=\left(\vec{\mu_{\lambda}},\Sigma_{\lambda} \right) \right\}$;
+
+
+- the component weights $\textsl p_{\lambda}\left(1\leq\lambda\leq \textsl L \right)$ summing to 1;
+
+- the clique potential (or inter-pixel interaction strength), $\beta$;
+ 
+- the segmentation $\omega$.
+
+The joint distribution of above variables $L,p,\beta,\omega,\Theta,F$ given by formula :
+\begin{equation}
+P\left(L,p,\beta,\omega,\Theta,F\right) = P\left(\omega,F\left|\Theta,\beta,p,L\right.\right)P\left(\Theta,\beta,p,L\right)
+\end{equation}
+In our context it is natural to impose the independence of labeling $\Theta$, inter-pixel composition $\beta$, component weights $p$, and labels set power $L$ as parameters that given randomly in every processed image. Therefore their joint probability reduces to 
+\begin{equation}
+P\left(\Theta,\beta,p,L\right) = P\left(\Theta\right)P\left(\beta\right)P\left(p\right)P\left(L\right)
+\end{equation}
+The posterior distribution of $\left(F, \omega \right)$ may be expressed as:
+\begin{equation}
+P\left(F,\omega\left|\right.\Theta,\beta,p,L\right)=P\left(F\left|\right.\omega,\Theta,\beta,p,L\right)P\left(\omega\left|\right.\Theta,\beta,p,L\right)
+\end{equation}
+As declared earlier pixel classes (segmentation itself) represented as a multivariate Gaussian distribution and the underlied MRF (Markov Random Field) process follows a Gibbs distribution defined over a first order neighborhood system (Figure 1). Previous equation could be factored out as:
+\begin{equation}
+P\left(F\left|\right.\omega,\Theta,\beta,p,L\right) = 
+P\left(F\left|\right.\omega,\Theta\right)=
+
+\prod_{s \in S}
+\left(\frac{1}{\sqrt{\left(2\pi\right)^{3}\left|\sum_{\omega_{s}}\right|}}
+\exp\left(
+-\frac{1}{2}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)
+\sum_{\omega_{s}}^{-1}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T
+\right)
+\right)
+\end{equation}
+
+Proceeding further we have:
+\begin{equation}
+P\left(\omega\left|\right.\Theta,\beta,p,L\right) = 
+P\left(\omega\left|\right.\beta,p,L\right) = 
+\frac {1} {Z\left(\beta,p,L\right)}
+\exp\left(
+-U\left(\omega\left|\right.\beta p,L\right)
+\right)
+\end{equation}
+where $U\left(\omega\left|\right.\beta, p, L \right)$ is energy function:
+\begin{equation}
+U\left(\omega\left|\right.\beta, p,L\right) = 
+\sum_{s\in S}-\log\left(p_{\omega_{s}}\right) +
+\beta\sum_{\left\{s,r\right\}\in C}
+\delta\left(\omega_{s},\omega_{r}\right)
+\end{equation}
+$\delta\left(\omega_{s},\omega_{r}\right) = 1$ if $\omega_{s}$ and $\omega_{r}$ are different and -1 otherwise. 
+$Z\left(\beta,p,L\right) = \sum_{\omega\in \Omega}\exp\left( -U\left(\omega\left|\right.\beta,p,L\right)\right)$ is normalization constant or partition function. $C$ denotes the set of cliques and $\left\{s,r\right\}$ is doubleton containing the neighboring pixel sites $r$ and $s$.
+
+Note that the whole posterior distribution could be derived from Gibbs distribution where the Gaussian distribution taken in account in the energy of the external field:
+\begin{equation}
+U\left(F\left|\right.\omega,\Theta\right) = 
+-\log\left(P\left(F\left|\right.\omega,\Theta\right)\right) = 
+
+\sum\limits_{s\in S}\left(
+\ln\left(\sqrt{\left(2\pi\right)^{3}}\right) +
+\frac{1}{2}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)
+\sum_{\omega_{s}}^{-1}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T
+\right)
+\end{equation}
+
+The partition function $Z\left(\beta,p,L\right)$ is not tractable according to (NEED CITATION), the comparison of the likelihood of two different MRF realizations from equation (5) is unfeasible.
+However Pseudo-Likelihood could be compared according to (NEED CITATION) as:
+\begin{equation}
+P\left(\omega\left|\right.\beta,p,L\right) \approx
+\prod_{s \in S }
+\frac{
+p_{\omega_{s}}
+\exp\left(
+-\beta 
+\sum_{\forall r : \left\{s,r\right\} \in C } \delta\left(\omega_{s},\omega_{r}\right)
+\right)
+}
+{
+\sum_{\lambda\in\Lambda}p_{\lambda}
+\exp\left(
+-\beta
+\sum_{\forall r : \left\{s,r\right\} \in C } \delta\left(\lambda,\omega_{r}\right)
+\right)
+}
+\end{equation}
+
+Now, we are using facts that $P\left(F\right)$ is constant for any particular image and Equation (1), Equation (2), Equation (4) and Equation (8) we are able to approximate the posterior density $P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) = P\left(L,p,\beta,\omega,\Theta,F\right)/P\left(F\right)$:
+\begin{equation}
+P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) = 
+P\left(F\left|\right.\omega\Theta\right)
+P\left(\omega\left|\right.\beta,p,L\right)
+P\left(\Theta\right)P\left(\beta\right)P\left(p\right)P\left(L\right)
+
+\approx
+\prod\limits_{s \in S}
+\left(
+\frac{1}
+{\sqrt{\left(2\pi\right)^{3}\left|\sum_{\omega_{s}}\right|}}
+\exp\left(
+-\frac{1}{2}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)
+\sum_{\omega_{s}}^{-1}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T
+\right)
+\right)
+
+\times
+\prod\limits_{s\in S}
+\frac{
+p_{\omega_{s}}
+\exp\left(
+-\beta 
+\sum_{\forall r : \left\{s,r\right\} \in C } \delta\left(\omega_{s},\omega_{r}\right)
+\right)
+}
+{
+\sum_{\lambda\in\Lambda}p_{\lambda}
+\exp\left(
+-\beta
+\sum_{\forall r : \left\{s,r\right\} \in C } \delta\left(\lambda,\omega_{r}\right)
+\right)
+}
+
+\times P\left(\beta\right)P\left(L\right)
+\prod\limits_{\lambda\in\Lambda}
+P\left(\vec{\mu_{\lambda}}\right)P\left(\Sigma_{\lambda}\right)P\left(p_{\lambda}\right)
+\end{equation}
+
+Concerning the priors, this model follows (NEED CITATION) and choose uniform reference priors for $L$, $\vec{\mu_{\lambda}}$, $\Sigma_{\lambda}$, $p_{\lambda}$ where $\lambda \in \Lambda$.
+
+\subsection{Sampling from Posterior}
+Herein we will construct MCMC sampler from posterior distribution which is used in equation (9) for our segmentation model. Classical MCMC cannot be used, because of changing dimensionality of the parameter space. Reversible Jump MCMC however capable to hold this issue (CITATION NEED RJMCMC). Our set of unknowns is $\left\{L,p,\beta,\omega,\Theta\right\}$, lets denote it as $X$ and let $\pi\left(X\right)$ be the target probability measure (the posterior distribution). The wildly used tool to sample from such distribution is Metropolis-Hasting method (CITATION NEED). When the current state is $X$ the new state is drawn from an arbitrary joint distribution $q\left(X,X'\right)$. The new state is accepted with probability 
+\begin{equation}
+A(X,X') = \min\left(1,
+\frac{\pi\left(X'\right)q\left(X,X'\right)}
+{\pi\left(X\right)q\left(X',X\right)}\right)
+\end{equation}
+We have multiple parameter subspaces of different dimensionality and it is nessesary to devise move types between subspaces (CITATION?). These moves will be combined in so called hybrid sampler (CITATION?) by random choice between available moves at each transition. We denote the moves as $m \in M = \left\{1,2,...,M\right\}$ and let $q\left(X,X'\right)$ be the probability of proposing the move type $m$ and state $X'$ when the current state is $X$. Not all move types available from the beginning, so for some certain $X, q_{m}\left(X,\cdot\right)$ might be $0$ for some $m$. Furthermore $ q_{m}\left(X,\cdot\right)$ is is a sub-probability measure on $m$ at $X'$ and $\sum\limits_{m \in M} q_{m}\left(X,\cdot\right) \leq 1$ (CITATION ORIGINAL RJ PAPER). The proposed state is than accepted with probability 
+\begin{equation}
+A_{m}(X,X') = \min\left(1,
+\frac{\pi\left(X'\right)q_{m}\left(X,X'\right)}
+{\pi\left(X\right)q_{m}\left(X',X\right)}\right)
+\end{equation}
+
+NEED TO PUT MORE JUSTIFICATION AND EXPLANATION HERE.
+
+\subsection{Hybrid Sampler}
+For sketched in previous section model we need to work out sampler. It will consist of five moves:
+
+1. Sampling the class labels $\omega$, i.e. resegment the image;
+
+2. Sampling Gaussian parameters $\Theta=\left\{\left(\vec_{\mu_{\lambda},\Sigma_{\lambda}\right)\left|\right.\lambda\in\Lambda\right\}$;
+
+3. Sampling the mixture weights $p_{\lambda}\left(\lambda\in\Lambda\right)$;
+
+4. Sampling the MRF hyperparameter \beta;
+
+5. sampling the number of classes $L$, i.e. splitting one of mixture components into two or merge two of them into one.
+
+Cases 1 - 4 are not random instead of case 5 where at each sweep we decide randomly about splitting or combining.
+
+\subsection{Move 1 - image segmentation}
+This move is just classical image segmentation with known parameters, i.e. we have fixed parameters - their estimates, 
+
+\begin{equation}
+P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) \approx 
+P\left(F\left|\right.\omega,\widehat{\Theta}\right)
+P\left(\omega\left|\right.\widehat{\beta},\widehat{p},\widehat{L}\right)
+P\left(\Theta\right)P\left(\beta\right)P\left(p\right)P\left(L\right)
+
+\approx
+\prod\limits_{s \in S}
+\left(
+\frac{1}
+{\sqrt{\left(2\pi\right)^{3}\left|\widehat{\Sigma}_{\omega_{s}}\right|}}
+\exp\left(
+-\frac{1}{2}
+\left(\vec{f}_{s}-\vec{\widehat{\mu}}_{\omega_{s}}\right)
+\widehat{\Sigma}_{\omega_{s}}^{-1}
+\left(\vec{f}_{s}-\vec{\widehat{\mu}}_{\omega_{s}}\right)^T
+\right)
+\right)
+
+\times
+\prod\limits_{s\in S}
+\widehat{p}_{\omega_{s}}
+\exp\left(
+-\widehat{\beta} 
+\sum\limits_{\forall r : \left\{s,r\right\} \in C } \delta\left(\omega_{s},\omega_{r}\right)
+\right)
+\end{equation}
+
+We have eliminated $Z\left(\beta,p,L\right) = Z\left(\widehat{\beta},\widehat{p},\widehat{L}\right)$ because it is constant for the $\Omega$. Furthermore sub-chain could be sampled using Gibbs sampler since $\omega$ takes discrete values over finite set $\Lambda$.
+
+\subsection{Move 2 - estimating Gaussian parameters}
+This move is aiming mean and covariance matrix of the pixel classes. By setting variables $L,p,\beta,\omega$ to their estimates $\widehat{L},\widehat{p},\widehat{\beta},\widehat{\omega}$ Equation (9) reduces to the form:
+\begin{equation}
+P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) \approx 
+P\left(F,\widehat{\omega}\left|\right.\Theta\right)P\left(\Theta\right) = 
+
+\prod\limits_{\lambda \in \Lambda}{
+\prod\limits_{s:\widehat{\omega}_{s}=\lambda}{
+P\left(\vec{f}_{s}\right|\left.\vec{\mu}_{\lambda},\Sigma_{lambda}\right)
+P\left(\vec{\mu}_{\lambda}\right)P\left(\Sigma_{\lambda}\right) = 
+
+\times
+\prod\limits_{s\in S}
+\frac{1}
+{\left(\left(2\pi\right)^{3}
+\left|\Sigma_{\lambda}\right|\right)^{\left|\Sigma_{\lambda}\right|/2}
+}
+\exp{
+\left(
+-\frac{1}{2}
+\sum\limits_{s:\widehat{\omega}_{s}=\lambda}\left(\vec{f}_{s}-\vec{\mu}_{\lambda}\right)
+\Sigma_{\lambda}^{-1}\left(\vec{f}_{s}-\vec{\mu}_{\lambda}\right)^{T}
+\right)
+}
+
+\times
+\prod\limits_{\lambda\in\Lambda}{
+P\left(\vec{\mu}_{\lambda}\right)P\left(\Sigma_{\lambda}\right)P\left(p_{\lambda}\right)
+}
+\end{equation}
+where $\left|\Sigma_{\lambda}\right|$ is number of sites labeled by $\lambda$.
+
+\subsection{Move 3 - sampling Mixture Weights}
+<not filled yet>
+\subsection{Move 4 - sampling Hyperparameter \beta}
+<not filled yet>
+\section{Move 5 - Estimating number of classes}
+<not filled yet>
+\subsection{Sampling distribution}
+<not filled yet>
+\subsection{Splitting classes (generating new parameters and reallocating labels)}
+<not filled yet>
+\subsection{Merging classes (generating new parameters and reallocating labels)}
+<not filled yet>
+\subsection{Move acceptance probability}
+
+\section{Optimization according to the MAP criteria, Simulated annealing}
+This section contains description of MAP estimator that provides us with an image segmentation$\widehat{\omega}$ and model parameters $\widehat{L},\widehat{p},\widehat{\beta},\widehat{\Theta}$. The estimation is done via stochastic relaxation algorithm. The MAP estimator is given by:
+\begin{equation}
+\left(\widehat{\omega},\widehat{L},\widehat{p},\widehat{\beta},\widehat{\Theta}\right)^{\left(MAP\right)} = 
+\arg \max\limits_{L,p,\beta,\omega,\Theta}P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) 
+\end{equation}
+with the following constaraints:
+\begin{equation}
+\omega \in \Omega,
+\end{equation}
+\begin{equation}
+L_{min} \leq L \leq L_{max},
+\end{equation}
+\begin{equation}
+\sum\limits_{\lambda\in\Lambda}p_{lambda} = 1,
+\end{equation}
+\begin{equation}
+\forall\labda\in\Lambda : 0 \leq \mu_{\labda,i} \leq 1,
+\end{equation}
+\begin{equation}
+\forall\labda\in\Lambda : 0 \leq \Sigma_{\labda,i,i} \leq 1, -1 \leq \Sigma_{\labda,i,j} \leq 1
+\end{equation}
+First equation of this section itself is a combinatorial optimization problem which requires special algorithms such as simulated annealing (CITATION NEEDED). In our case this process could be formulated as follows:
+
+\section{Algorithm, RJMCMC segmentation}
+
+1. Set $k=0$ and initialize $\widehat{L}^{0},\widehat{p}^{0},\widehat{\beta}^{0},\widehat{\Theta}^{0}$, and set temperature $\tau^{0}$.
+
+2. A sample $\left(\widehat{\omega}^{k},\widehat{L}^{k},\widehat{p}^{k},\widehat{\beta}^{k},\widehat{\Theta}^{k}\right)$ is drawn from the modified posterior distribution using the hybrid sampler defined in section (NUMBER NEEDED) before. The modification is due to simulated annealing constaraint - temperature $\tau_{k}$:
+\begin{equation}
+\prod\limits_{s\in S}
+\frac{1}
+{\left(\left(2\pi\right)^{3}
+\left|\Sigma_{\omega_{s}}\right|\right)^{1/2\tau_{k}}
+}
+\exp{
+\left(
+-\frac{1}{2\tau_{k}}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)
+\Sigma_{\omega_{s}}^{-1}\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^{T}
+\right)
+
+\times
+\prod\limits_{s\in S}\frac
+{\exp\left(\frac{\log\left(p_{\omega_{s}}\right)}{\tau_{k}}
+-\frac{\beta}{\tau_{k}}\sum\limits_{\forall r : \left\{s,r\right\}\in C}\delta\left(\omega_{s},\omega_{r}\right)\right)}
+{
+\sum\limits_{\lambda\in\Lambda}
+\exp\left(\frac{\log\left(p_{\lambda}\right)}{\tau_{k}}
+-\frac{\beta}{\tau_{k}}\sum\limits_{\forall r : \left\{s,r\right\}\in C}\delta\left(\lambda,\omega_{r}\right)\right)}
+}
+\end{equation}
+
+2.1. $\widehat{\omega}^{k}$ is drawn from distribution in Equation (NUMBER NEEDED).
+
+2.2. $\widehat{\Theta}^{k}$ is drawn from distribution in Equation (NUMBER NEEDED).
+
+2.3. $\widehat{p}^{k}$ is drawn from distribution in Equation (NUMBER NEEDED).
+
+2.4. Sampling MRF hyperparameter $\widehat{\beta}^{k}$ from Equation (NUMBER NEEDED).
+
+2.5. $\widehat{L}^{k}$ is estimated using the reversible jump techniques from the section (SECTION NUMBER NEEDED)
+
+3. GOTO to step 2 with $k=k+1$ and $T_{k+1}$ until $k\leq K$.
+
+
+
+\end{document}

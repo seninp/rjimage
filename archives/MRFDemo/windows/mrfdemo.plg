@@ -1,0 +1,71 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: mrfdemo - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP21.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I "c:\wxWindows242\include" /I "c:\wxWindows242\lib\msw" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "__WXMSW__" /D WINVER=0x0400 /Fp"Release/mrfdemo.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"Y:\src\MRFdemo\src\CKProcessTimeCounter.cpp"
+"Y:\src\MRFdemo\src\mersenne.cpp"
+"Y:\src\MRFdemo\src\mrf.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP21.tmp" 
+Creating temporary file "C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP22.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib winmm.lib advapi32.lib wsock32.lib wxmsw.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/mrf.pdb" /machine:I386 /out:"Release/mrf.exe" /libpath:"c:\wxWindows242\lib" 
+.\Release\CKProcessTimeCounter.obj
+.\Release\mersenne.obj
+.\Release\mrf.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP22.tmp"
+<h3>Output Window</h3>
+Compiling...
+CKProcessTimeCounter.cpp
+mersenne.cpp
+mrf.cpp
+Linking...
+LINK : warning LNK4089: all references to "ADVAPI32.dll" discarded by /OPT:REF
+LINK : warning LNK4089: all references to "WSOCK32.dll" discarded by /OPT:REF
+
+
+
+<h3>Results</h3>
+mrf.exe - 0 error(s), 2 warning(s)
+<h3>
+--------------------Configuration: mrfdemo - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP24.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "c:\wxWindows242\include" /I "c:\wxWindows242\lib\msw" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "__WXMSW__" /D WINVER=0x0400 /D "__WXDEBUG__" /Fp"Debug/mrfdemo.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"Y:\src\MRFdemo\src\CKProcessTimeCounter.cpp"
+"Y:\src\MRFdemo\src\mersenne.cpp"
+"Y:\src\MRFdemo\src\mrf.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP24.tmp" 
+Creating temporary file "C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP25.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib comctl32.lib rpcrt4.lib winmm.lib advapi32.lib wsock32.lib wxmswd.lib /nologo /subsystem:windows /incremental:yes /pdb:"Debug/mrf.pdb" /debug /machine:I386 /out:"Debug/mrf.exe" /pdbtype:sept /libpath:"c:\wxWindows242\lib" 
+.\Debug\CKProcessTimeCounter.obj
+.\Debug\mersenne.obj
+.\Debug\mrf.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\kato\LOCALS~1\Temp\8\RSP25.tmp"
+<h3>Output Window</h3>
+Compiling...
+CKProcessTimeCounter.cpp
+mersenne.cpp
+mrf.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+mrf.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
