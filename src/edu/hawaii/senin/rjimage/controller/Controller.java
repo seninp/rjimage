@@ -1,5 +1,6 @@
 package edu.hawaii.senin.rjimage.controller;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -22,7 +23,7 @@ public class Controller {
     this.view = view;
     view.addLoadListener(new ImageLoadListener());
     view.addRunListener(new RunSegmentationListener());
-    this.imageFactory.addObserver(this.view);
+    this.imageFactory.addObserver(view);
     view.showGUI();
   }
 
@@ -40,7 +41,7 @@ public class Controller {
 
       // Add the preview pane.
       fc.setAccessory(new ImagePreview(fc));
-      int returnVal = fc.showDialog(view, "Attach");
+      int returnVal = fc.showDialog(view.getJFrame(), "Attach");
       // Process the results.
       if (returnVal == JFileChooser.APPROVE_OPTION) {
         imageFactory.initFactory(fc.getSelectedFile());

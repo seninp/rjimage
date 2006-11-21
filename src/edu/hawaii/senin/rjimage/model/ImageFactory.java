@@ -56,6 +56,7 @@ public class ImageFactory extends Observable {
   }
 
   private void notifyChange() {
+    System.out.println("got changes!");
     setChanged();
     notifyObservers("fix");
   }
