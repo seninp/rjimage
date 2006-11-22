@@ -5,12 +5,17 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.BevelBorder;
+
+import edu.hawaii.senin.rjimage.model.ImageFactory;
+import edu.hawaii.senin.rjimage.model.ImageFactoryStatus;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -21,8 +26,12 @@ public class View implements Observer {
   private JTextPane logTextPane = new JTextPane();
   private JButton startProcessButton = new JButton("Start!");
   private JScrollPane logPane = new JScrollPane();;
-  private JPanel segmentedImagePane = new JPanel();
+  private JPanel currentImagePane = new JPanel();
   private JPanel originalImagePane = new JPanel();
+  private ImageIcon originalImageIcon = new ImageIcon();
+  private JLabel originalImageLabel = new JLabel(originalImageIcon);
+  private ImageIcon currentImageIcon = new ImageIcon();
+  private JLabel currentImageLabel = new JLabel(originalImageIcon);
 
   public View() {
     // does nothing
@@ -44,37 +53,39 @@ public class View implements Observer {
    * Creates the layout of the GUI window. Uses the MigLayout manager to simplify the display.
    */
   private void configureGUI() {
-    this.frame.setTitle("rjimageDemo v 0.01");
+
+    // set look and fill
     JFrame.setDefaultLookAndFeelDecorated(true);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    // set the layout for the application
     MigLayout layout = new MigLayout();
     this.frame.getContentPane().setLayout(layout);
-    {
-      this.frame.getContentPane().add(originalImagePane);
-      originalImagePane.setBounds(7, 7, 231, 189);
-      originalImagePane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
-    }
-    {
-      this.frame.getContentPane().add(segmentedImagePane);
-      segmentedImagePane.setBounds(252, 7, 238, 189);
-      segmentedImagePane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
-    }
-    {
-      this.frame.getContentPane().add(logPane);
-      logPane.setBounds(7, 252, 483, 63);
-      {
-        logPane.setViewportView(logTextPane);
-        logTextPane.setText("logging:");
-      }
-    }
-    {
-      this.frame.getContentPane().add(startProcessButton);
-      startProcessButton.setBounds(133, 210, 105, 28);
-    }
-    {
-      this.frame.getContentPane().add(loadImageButton);
-      loadImageButton.setBounds(7, 210, 119, 28);
-    }
-    this.frame.setSize(505, 381);
+
+    // add and set basic settings for the all panels
+    //
+    // original Image display panel
+    this.frame.getContentPane().add(originalImagePane);
+    originalImagePane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
+    originalImagePane.add(originalImageLabel);
+
+    // current segmented image panel
+    this.frame.getContentPane().add(currentImagePane);
+    currentImagePane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
+    currentImagePane.add(currentImageLabel);
+
+    // adding logging panel
+    this.frame.getContentPane().add(logPane);
+    logPane.setViewportView(logTextPane);
+    logTextPane.setText("logging:");
+
+    // add start button
+    this.frame.getContentPane().add(startProcessButton);
+    startProcessButton.setBounds(133, 210, 105, 28);
+
+    // add load image button
+    this.frame.getContentPane().add(loadImageButton);
+    loadImageButton.setBounds(7, 210, 119, 28);
 
     // Show frame
     this.frame.pack();
@@ -92,7 +103,24 @@ public class View implements Observer {
   }
 
   public void update(Observable arg0, Object arg1) {
-    System.out.println("Got to observable");
-
+    System.out.println(arg0.toString() + arg1.toString());
+    // if reported loading of new image
+    if ((arg0 instanceof ImageFactory)
+        && ((Integer)arg1).equals(ImageFactoryStatus.NEW_IMAGE)) {
+      if (null == ((ImageFactory) arg0).getOriginalImage()) {
+        assert true;
+      }
+      else {
+        originalImageIcon.setImage(((ImageFactory) arg0).getOriginalImage());
+        originalImageLabel.setIcon(originalImageIcon);
+        originalImageLabel.updateUI();
+        this.originalImagePane.repaint();
+        
+        currentImageIcon.setImage(((ImageFactory) arg0).getOriginalImage());
+        currentImageLabel.setIcon(currentImageIcon);
+        currentImageLabel.updateUI();
+        this.currentImagePane.repaint();
+      }
+    }
   }
 }

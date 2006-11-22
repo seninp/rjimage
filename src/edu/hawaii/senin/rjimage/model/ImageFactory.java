@@ -7,8 +7,6 @@ import java.util.Observable;
 
 import javax.imageio.ImageIO;
 
-import edu.hawaii.senin.rjimage.view.View;
-
 public class ImageFactory extends Observable {
 
   private BufferedImage originalImage;
@@ -32,11 +30,6 @@ public class ImageFactory extends Observable {
     this.originalImage = null;
   }
 
-  public void addObserver(View view) {
-    // TODO Auto-generated method stub
-
-  }
-
   public void RunSegmentation() {
     // TODO Auto-generated method stub
 
@@ -52,12 +45,13 @@ public class ImageFactory extends Observable {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-    this.notifyChange();
+    setChanged();
+    notifyObservers(ImageFactoryStatus.NEW_IMAGE);
+
   }
 
-  private void notifyChange() {
-    System.out.println("got changes!");
-    setChanged();
-    notifyObservers("fix");
+  public BufferedImage getOriginalImage(){
+    return this.originalImage;
   }
+  
 }

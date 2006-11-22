@@ -1,6 +1,5 @@
 package edu.hawaii.senin.rjimage.controller;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -14,16 +13,16 @@ import edu.hawaii.senin.rjimage.view.View;
 
 public class Controller {
 
-  private final ImageFactory imageFactory;
+  private ImageFactory imageFactory;
 
   private View view;
 
   public Controller(ImageFactory imageFactory, View view) {
     this.imageFactory = imageFactory;
+    imageFactory.addObserver(view);
     this.view = view;
     view.addLoadListener(new ImageLoadListener());
     view.addRunListener(new RunSegmentationListener());
-    this.imageFactory.addObserver(view);
     view.showGUI();
   }
 

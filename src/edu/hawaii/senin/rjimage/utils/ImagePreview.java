@@ -12,6 +12,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 /* ImagePreview.java by FileChooserDemo2.java. */
+@SuppressWarnings("serial")
 public class ImagePreview extends JComponent implements PropertyChangeListener {
   ImageIcon thumbnail = null;
   File file = null;
