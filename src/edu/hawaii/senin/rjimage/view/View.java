@@ -116,7 +116,20 @@ public class View implements Observer {
         originalImageLabel.updateUI();
         this.originalImagePane.repaint();
         
-        currentImageIcon.setImage(((ImageFactory) arg0).getOriginalImage());
+        currentImageIcon.setImage(((ImageFactory) arg0).getCurrentImage());
+        currentImageLabel.setIcon(currentImageIcon);
+        currentImageLabel.updateUI();
+        this.currentImagePane.repaint();
+      }
+    }
+    
+    if ((arg0 instanceof ImageFactory)
+        && ((Integer)arg1).equals(ImageFactoryStatus.NEW_SEGMENTATION)) {
+      if (null == ((ImageFactory) arg0).getOriginalImage()) {
+        assert true;
+      }
+      else {
+        currentImageIcon.setImage(((ImageFactory) arg0).getCurrentImage());
         currentImageLabel.setIcon(currentImageIcon);
         currentImageLabel.updateUI();
         this.currentImagePane.repaint();
