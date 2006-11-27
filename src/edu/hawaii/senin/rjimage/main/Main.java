@@ -19,6 +19,7 @@ public class Main {
   public static void main(String[] args) {
     ImageFactory imageFactory = new ImageFactory();
     View view = new View();
+    view.run();
     new Controller(imageFactory, view);
   }
 

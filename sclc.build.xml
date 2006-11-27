@@ -1,0 +1,24 @@
+<project name="sclc" default="sclc">
+  <description>
+    Runs sclc on system to generate information on size.
+    Invocation: ant -f sclc.build.xml
+  </description>
+
+  <import file="build.xml"/>
+  <property name="sclc.dir" location="${build.dir}/sclc" />
+
+  <target name="sclc" depends="sclc.tool" description="Runs SCLC."/>
+
+  <target name="sclc.tool" depends="compile, clean" description="Compute size data on the source code using SCLC.">
+    <!-- Check for the SCLC_HOME environment variable, failing the build if it can't be found. -->
+    <available file="${env.SCLC_HOME}/src/sclc" property="sclc.available"/>
+    <fail unless="sclc.available" message="Error: SCLC_HOME not set or file 'sclc' not found, indicating SCLC is not installed."/>
+    <mkdir dir="${sclc.dir}" />
+
+    <!-- Run size data using SCLC.  Invoke Perl via the exec task to run SCLC. -->
+    <exec executable="perl" dir="${build.dir}">
+      <arg line="${env.SCLC_HOME}/src/sclc -default_exclude -ignore -xml_output ${sclc.dir}/size.xml -recurse ${basedir}" />
+    </exec> 
+  </target>
+</project>
+

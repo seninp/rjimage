@@ -2,6 +2,7 @@ package edu.hawaii.senin.rjimage.controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 
@@ -17,12 +18,17 @@ public class Controller {
 
   private View view;
 
+  private ArrayList<Thread> threads = new ArrayList<Thread>();
+
   public Controller(ImageFactory imageFactory, View view) {
     this.imageFactory = imageFactory;
     imageFactory.addObserver(view);
     this.view = view;
     view.addLoadListener(new ImageLoadListener());
-    view.addRunListener(new RunSegmentationListener());
+    view.addICMListener(new RunICMListener());
+    view.addGibbsListener(new RunGibbsListener());
+    view.addMetropolisListener(new RunMetropolisListener());
+    view.addStopSimulationListener(new StopSimulationListener());
     view.showGUI();
   }
 
@@ -30,8 +36,7 @@ public class Controller {
     public void actionPerformed(ActionEvent e) {
 
       JFileChooser fc = new JFileChooser();
-      // Add a custom file filter and disable the default
-      // (Accept All) file filter.
+
       fc.addChoosableFileFilter(new ImageFilter());
       fc.setAcceptAllFileFilterUsed(false);
 
@@ -43,24 +48,42 @@ public class Controller {
       int returnVal = fc.showDialog(view.getJFrame(), "Attach");
       // Process the results.
       if (returnVal == JFileChooser.APPROVE_OPTION) {
+        view.addToLog("Attaching file: " + fc.getSelectedFile() + ".\n");
         imageFactory.initFactory(fc.getSelectedFile());
-        // log.append("Attaching file: " + file.getName() + "." + newline);
-        System.out.println("Choosed file " + fc.getSelectedFile().getPath());
       }
       else {
-        // log.append("Attachment cancelled by user." + newline);
+        assert true;
+        view.addToLog("Attachment cancelled by user.\n");
       }
-      // log.setCaretPosition(log.getDocument().getLength());
-
-      // Reset the file chooser for the next time it's shown.
       fc.setSelectedFile(null);
-
     }
   }
 
-  private class RunSegmentationListener implements ActionListener {
+  private class RunGibbsListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      imageFactory.RunSegmentation();
+      imageFactory.setMethod("gibbs");
+      new Thread(imageFactory).start();
+    }
+  }
+
+  private class RunICMListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      imageFactory.setMethod("icm");
+      new Thread(imageFactory).start();
+    }
+  }
+
+  private class RunMetropolisListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      imageFactory.setMethod("metropolis");
+      new Thread(imageFactory).start();
+    }
+  }
+
+  private class StopSimulationListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      imageFactory.setMethod("metropolis");
+      new Thread(imageFactory).start();
     }
   }
 

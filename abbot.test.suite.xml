@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AWTTestScript>
+  <component class="javax.swing.JLayeredPane" id="JLayeredPane Instance" index="1" parent="JRootPane Instance" window="Stack MVC GUI 2" />
+  <component class="javax.swing.JPanel" id="JPanel Instance" index="0" parent="JLayeredPane Instance" window="Stack MVC GUI 3" />
+  <component class="javax.swing.JRootPane" id="JRootPane Instance" index="0" parent="Stack MVC GUI" />
+  <component class="javax.swing.JButton" id="Pop" index="2" parent="JPanel Instance" text="Pop" window="Stack MVC GUI 4" />
+  <component class="javax.swing.JButton" id="Push" index="1" parent="JPanel Instance" text="Push" window="Stack MVC GUI 4" />
+  <component class="javax.swing.JFrame" id="Stack MVC GUI" root="true" title="Stack MVC GUI" />
+  <component class="javax.swing.JFrame" id="Stack MVC GUI 2" root="true" title="Stack MVC GUI" />
+  <component class="javax.swing.JFrame" id="Stack MVC GUI 3" root="true" title="Stack MVC GUI" />
+  <component class="javax.swing.JFrame" id="Stack MVC GUI 4" root="true" title="Stack MVC GUI" />
+  <component class="javax.swing.JLabel" id="Stack State: [Stack [1]]" index="4" parent="JPanel Instance" text="Stack State: [Stack [1]]" window="Stack MVC GUI 4" />
+  <launch args="[]" class="edu.hawaii.stackmvcgui.main.Main" classpath="./build/stackmvcgui.jar" desc="StackMVCgui" method="main" threaded="true" />
+  <sequence>
+    <action args="Push" class="javax.swing.AbstractButton" method="actionClick" />
+    <action args="Push" class="javax.swing.AbstractButton" method="actionClick" />
+    <action args="Push" class="javax.swing.AbstractButton" method="actionClick" />
+    <action args="Pop" class="javax.swing.AbstractButton" method="actionClick" />
+    <action args="Pop" class="javax.swing.AbstractButton" method="actionClick" />
+  </sequence>
+  <assert component="Stack State: [Stack [1]]" method="getText" value="Stack State: [Stack [1]]" />
+  <terminate />
+</AWTTestScript>
+

@@ -1,0 +1,2 @@
+System.out.print cannot be resolved or is not a fieldint[][] arr = new int[12][13];
+System.out.println(arr[1].length);
