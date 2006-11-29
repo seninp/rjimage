@@ -29,6 +29,7 @@ public class View implements Observer {
   private JButton startICMButton = new JButton("ICM");
   private JButton startGibbsButton = new JButton("Gibbs");
   private JButton startMetropolisButton = new JButton("Metropolis");
+  private JButton startRJButton = new JButton("RJMCMC");
   private JButton stopSimulationButton = new JButton("Stop that!");
   private JPanel currentImagePane = new JPanel();
   private JPanel originalImagePane = new JPanel();
@@ -63,6 +64,9 @@ public class View implements Observer {
     startMetropolisButton.addActionListener(listener);
   }
 
+  public void addRJListener(ActionListener listener) {
+    startRJButton.addActionListener(listener);
+  }
   public void addStopSimulationListener(ActionListener listener) {
     stopSimulationButton.addActionListener(listener);
   }
@@ -107,7 +111,10 @@ public class View implements Observer {
 
     // add start button
     buttonsPane.add(startMetropolisButton);
-
+    
+    // add start button
+    buttonsPane.add(startRJButton);
+    
     // add stop button
     buttonsPane.add(stopSimulationButton, "wrap");
 

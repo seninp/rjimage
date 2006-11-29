@@ -28,6 +28,7 @@ public class Controller {
     view.addICMListener(new RunICMListener());
     view.addGibbsListener(new RunGibbsListener());
     view.addMetropolisListener(new RunMetropolisListener());
+    view.addRJListener(new RunRJListener());
     view.addStopSimulationListener(new StopSimulationListener());
     view.showGUI();
   }
@@ -80,6 +81,13 @@ public class Controller {
     }
   }
 
+  private class RunRJListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      imageFactory.setMethod("rjmcmc");
+      new Thread(imageFactory).start();
+    }
+  }  
+  
   private class StopSimulationListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       imageFactory.setMethod("metropolis");

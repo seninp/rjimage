@@ -3,6 +3,7 @@ package edu.hawaii.senin.rjimage.model;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -12,6 +13,7 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.TreeMap;
@@ -69,7 +71,11 @@ public class ImageFactory extends Observable implements Runnable {
   /**
    * Temperature decrease rate.
    */
-  private Double tempRate = 0.997D;
+  private Double tempRate = 0.989765D;
+
+  private Integer minClasses = 2;
+
+  private Integer maxClasses = 10;
 
   private String method;
 
@@ -84,11 +90,12 @@ public class ImageFactory extends Observable implements Runnable {
     else {
       this.classes = new TreeMap<Integer, IClass>();
     }
-//    this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
-//    this.classes.put(Integer.valueOf(1), new IClass(0.4, 0.1, 0.2));
-//    this.classes.put(Integer.valueOf(2), new IClass(0.5, 0.1, 0.2));
-//    this.classes.put(Integer.valueOf(3), new IClass(0.7, 0.1, 0.2));
-//    this.classes.put(Integer.valueOf(4), new IClass(0.9, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(1), new IClass(0.4, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(2), new IClass(0.5, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(3), new IClass(0.7, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(4), new IClass(0.9, 0.1, 0.2));
+
     this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
     this.classes.put(Integer.valueOf(1), new IClass(0.5, 0.1, 0.2));
     this.classes.put(Integer.valueOf(2), new IClass(0.9, 0.1, 0.2));
@@ -548,9 +555,153 @@ public class ImageFactory extends Observable implements Runnable {
     else if (this.method.equalsIgnoreCase("gibbs")) {
       gibbsSampler();
     }
+    else if (this.method.equalsIgnoreCase("rjmcmc")) {
+      rjmcmcSampler();
+    }
+  }
+
+  private void rjmcmcSampler() {
+
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    Integer no_regions = this.classes.keySet().size();
+    // make instance of random number generator
+    RandomDataImpl randGen = new RandomDataImpl();
+
+    Double temp = this.startTemp;
+    Double tempRate = this.tempRate;
+
+    Double oldEnergy = 0D;
+    Double deltaEnergy = 10000D;
+    Double deltaEnergyMin = 0.01;
+
+    Integer iterationsCounter = 0;
+    while ((deltaEnergy > deltaEnergyMin) && (iterationsCounter < 20000)) {// stop when energy
+      // change is
+      // small
+
+      deltaEnergy = 0D;
+      Double currentEnergy = getGlobalEnergy();
+
+      // ######## MOVE 1.
+      // having current segmentation in the classes Map go with the first move - Gaussian
+      // segmentation
+      this.resegmentImage();
+
+      // ######## MOVE 2.
+      // check the deviation within segmentation
+      Double rnd = randGen.nextUniform(0D, 1D);
+      // we choose class to split by uniform distribution.
+      Integer class2Split = ((Double) (rnd / (1 / ((Integer) this.classes.size()).doubleValue())))
+          .intValue();
+      // we are choosing merging classes probability using calculations according Kato article
+      // (5.17)
+      Double distanceSum = 0D;
+      for (Integer cls : this.classes.keySet()) {
+        for (int c = 0; c < this.classes.size(); c++) {
+          if (!cls.equals(c)) {
+            distanceSum += mahalanobisDistance(cls, c);
+          }
+        }
+      }// so we have calculated the sum of all distances
+      // go find the minimal pair.
+      Integer minClass1 = 0;
+      Integer minClass2 = 1;
+      Double tmpDist = mahalanobisDistance(minClass1, minClass2);
+      Double minDist = tmpDist;
+      for (Integer cls : this.classes.keySet()) {
+        for (int c = 0; c < this.classes.size(); c++) {
+          if (!cls.equals(c)) {
+            tmpDist = mahalanobisDistance(cls, c);
+            if (tmpDist < minDist) {
+              minDist = tmpDist;
+              minClass1 = cls;
+              minClass2 = c;
+            }
+          }
+        }
+      }// minimal pair search finished.
+
+      if (this.classes.size() == this.minClasses) {
+        IClass underSplitting = this.classes.get(class2Split);
+        // choosing split here and getting new parameters
+        ArrayList<IClass> splitClasses = doSplit(underSplitting);
+      }
+      else if (this.classes.size() == this.maxClasses) {
+        IClass mergeClass = doMerge(this.classes.get(minClass1), this.classes.get(minClass2));
+      }
+      else {// here we need to decide which way to choose
+
+      }
+
+      temp = temp * tempRate; // decrease temperature
+
+      iterationsCounter++;
+      setChanged();
+      notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
+          + currentEnergy + "E delta: " + deltaEnergy + "\n");
+      this.currentImage = generateSegmentedImage();
+      setChanged();
+      notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
+
+    }// while
+  }
+
+  private IClass doMerge(IClass class1, IClass class2) {
+    Double newMean = (class1.getMean() + class2.getMean()) / 2;
+    Double newSigma = (class1.getStDev() + class2.getStDev());
+    Double newP = class1.getWeight() + class2.getWeight();
+    // public IClass(Double mean, Double stdev, Double weight) {
+    return new IClass(newMean, newSigma, newP);
+  }
+
+  /**
+   * Does splitting IClass by two
+   * 
+   * @param underSplitting class to split by two.
+   * @return classes that result splitting.
+   */
+  private ArrayList<IClass> doSplit(IClass underSplitting) {
+
+    RandomDataImpl randGen = new RandomDataImpl();
+
+    Double m_old = underSplitting.getMean();
+    Double l_old = underSplitting.getStDev();
+    // generating sets of random variables and getting parameters for the + class
+    // BETA RANDOM FUNCTION NEED TO BE IMPLEMENTED
+    Double u1 = randGen.nextUniform(0D, 1D);
+    Double p_lambda1 = l_old * u1;
+    Double p_lambda2 = l_old * (1 - u1);
+
+    Double u2 = randGen.nextUniform(0D, 1D);
+    Double m_lambda1 = m_old + u2 * Math.sqrt(l_old * ((1 - u1) / u1));
+    Double m_lambda2 = m_old - u2 * Math.sqrt(l_old * (u1 / (1 - u1)));
+
+    Double u3 = randGen.nextUniform(0D, 1D);
+    Double l_lambda1 = u3 * (1 - u2 * u2) * l_old * (1 / u1);
+    Double l_lambda2 = (1 - u3) * (1 - u2 * u2) * l_old * (1 / u1);
+
+    ArrayList<IClass> res = new ArrayList<IClass>();
+    // public IClass(Double mean, Double stdev, Double weight) {
+    res.add(new IClass(m_lambda1, l_lambda1, p_lambda1));
+    res.add(new IClass(m_lambda2, l_lambda2, p_lambda2));
+    return res;
+
   }
 
   public void setMethod(String method) {
     this.method = method;
   }
+
+  public Double mahalanobisDistance(Integer i, Integer j) {
+    IClass class1 = this.classes.get(i);
+    IClass class2 = this.classes.get(j);
+    Double part1 = (class1.getMean() - class2.getMean()) * (1 / class1.getStDev())
+        * (class1.getMean() - class2.getMean());
+    Double part2 = (class2.getMean() - class1.getMean()) * (1 / class2.getStDev())
+        * (class2.getMean() - class1.getMean());
+
+    return part1 + part2;
+  }
+
 }
