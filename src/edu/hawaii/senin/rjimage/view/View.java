@@ -12,38 +12,79 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
+import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
 
 import net.miginfocom.swing.MigLayout;
 import edu.hawaii.senin.rjimage.model.ImageFactory;
 import edu.hawaii.senin.rjimage.model.ImageFactoryStatus;
 
+/**
+ * Main view panel for the RJMCMC demo.
+ * 
+ * @author Pavel Senin.
+ * 
+ */
 public class View implements Observer {
 
+  // setup main frame
   private JFrame frame = new JFrame("rjimageDemo v 0.01");
+
+  // setup original image panel
+  private JPanel originalImagePane = new JPanel();
+  private ImageIcon originalImageIcon = new ImageIcon();
+  private JLabel originalImageLabel = new JLabel(originalImageIcon);
+
+  // setup current (segmented) original image panel
+  private JPanel currentImagePane = new JPanel();
+  private ImageIcon currentImageIcon = new ImageIcon();
+  private JLabel currentImageLabel = new JLabel(originalImageIcon);
+
+  // setup parameters panel along with fields
+  private JPanel parametersPane = new JPanel();
+  private JLabel temperatureLabel = new JLabel("Starting temperature");
+  private JTextField temperatureTextField = new JTextField("6.0");
+  private JLabel coolingScheduleLabel = new JLabel("Temperature schedule");
+  private JTextField coolingScheduleTextField = new JTextField("0.98");
+
+  // setup buttons panel
+  private JPanel buttonsPane = new JPanel();
   private JButton loadImageButton = new JButton("Load...");
-  private JTextArea logTextArea = new JTextArea();
-  JScrollPane logTextPane = new JScrollPane(logTextArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-      JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
   private JButton startICMButton = new JButton("ICM");
   private JButton startGibbsButton = new JButton("Gibbs");
   private JButton startMetropolisButton = new JButton("Metropolis");
   private JButton startRJButton = new JButton("RJMCMC");
   private JButton stopSimulationButton = new JButton("Stop that!");
-  private JPanel currentImagePane = new JPanel();
-  private JPanel originalImagePane = new JPanel();
-  private JPanel buttonsPane = new JPanel();
-  private ImageIcon originalImageIcon = new ImageIcon();
-  private JLabel originalImageLabel = new JLabel(originalImageIcon);
-  private ImageIcon currentImageIcon = new ImageIcon();
-  private JLabel currentImageLabel = new JLabel(originalImageIcon);
+
+  // setup logging panel
+  private JTextArea logTextArea = new JTextArea();
+  JScrollPane logTextPane = new JScrollPane(logTextArea, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+      JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
   private StringBuffer logText = new StringBuffer(10000);
 
+  /**
+   * Needed by Java language standards.
+   * 
+   */
   public View() {
     // does nothing
+    assert true;
+  }
+  
+  /**
+   * Needed by Java language standards to run this stuff.
+   *
+   */
+  public void run(){
+    // does nothing
+    assert true;    
   }
 
+  /**
+   * Main frame getter.
+   * 
+   * @return main frame.
+   */
   public JFrame getJFrame() {
     return this.frame;
   }
@@ -67,6 +108,7 @@ public class View implements Observer {
   public void addRJListener(ActionListener listener) {
     startRJButton.addActionListener(listener);
   }
+
   public void addStopSimulationListener(ActionListener listener) {
     stopSimulationButton.addActionListener(listener);
   }
@@ -94,6 +136,17 @@ public class View implements Observer {
     currentImagePane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
     currentImagePane.add(currentImageLabel);
 
+    this.frame.getContentPane().add(parametersPane, "grow, span 2, wrap");
+    parametersPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
+    MigLayout staticLayout = new MigLayout("fillx", "[left]5[grow,fill]unrel[left]5[grow,fill]",
+        "[]10[]10[]");
+    this.parametersPane.setLayout(staticLayout);
+    this.parametersPane.add(new JLabel("Temperature settings:"), "span 2,wrap");
+    this.parametersPane.add(temperatureLabel, "");
+    this.parametersPane.add(temperatureTextField, "");
+    this.parametersPane.add(coolingScheduleLabel, "");
+    this.parametersPane.add(coolingScheduleTextField, "wrap");
+
     // all buttons pane
     this.frame.getContentPane().add(buttonsPane, "width :690:, height :60:, span 2, wrap");
     // MigLayout buttonsPaneLayout = new MigLayout("", "[center]50[center]", "[]10[]10[]");
@@ -111,10 +164,10 @@ public class View implements Observer {
 
     // add start button
     buttonsPane.add(startMetropolisButton);
-    
+
     // add start button
     buttonsPane.add(startRJButton);
-    
+
     // add stop button
     buttonsPane.add(stopSimulationButton, "wrap");
 
@@ -190,13 +243,35 @@ public class View implements Observer {
     }
 
   }
+  
 
-  public void run() {
-    // TODO Auto-generated method stub
-
+  /**
+   * Reports initial temperature for simulated annealing.
+   * 
+   * @return initial temperature.
+   */
+  public Double getStartTemperature() {
+    return Double.valueOf(this.temperatureTextField.getText());
   }
 
+  /**
+   * Reports temperature schedule.
+   * 
+   * @return temperature schedule.
+   */
+  public Double getCoolingSchedule() {
+    return Double.valueOf(this.coolingScheduleTextField.getText());
+  }
+
+  /**
+   * Adds provided string to the log panel.
+   * 
+   * @param str string to add.
+   */
   public void addToLog(String str) {
+    if(str.charAt(str.length()-1) != '\n'){
+      str = str.concat("\n");
+    }
     this.logTextArea.append(str);
     this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
   }

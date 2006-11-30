@@ -20,7 +20,9 @@ import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.math.MathException;
 import org.apache.commons.math.random.RandomDataImpl;
+import org.apache.commons.math.special.Beta;
 
 /**
  * This is the main class for the Reversible Jump Image Segmentation. The work based on the Zoltan
@@ -67,11 +69,11 @@ public class ImageFactory extends Observable implements Runnable {
   /**
    * Starting temperature
    */
-  private Double startTemp = 75D;
+  private Double startTemp = 6D;
   /**
    * Temperature decrease rate.
    */
-  private Double tempRate = 0.989765D;
+  private Double coolingRate = 0.995D;
 
   private Integer minClasses = 2;
 
@@ -90,15 +92,17 @@ public class ImageFactory extends Observable implements Runnable {
     else {
       this.classes = new TreeMap<Integer, IClass>();
     }
-    // this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
-    // this.classes.put(Integer.valueOf(1), new IClass(0.4, 0.1, 0.2));
-    // this.classes.put(Integer.valueOf(2), new IClass(0.5, 0.1, 0.2));
-    // this.classes.put(Integer.valueOf(3), new IClass(0.7, 0.1, 0.2));
-    // this.classes.put(Integer.valueOf(4), new IClass(0.9, 0.1, 0.2));
-
     this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(1), new IClass(0.5, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(2), new IClass(0.9, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(1), new IClass(0.3, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(2), new IClass(0.4, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(3), new IClass(0.5, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(4), new IClass(0.6, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(5), new IClass(0.7, 0.1, 0.2));
+    this.classes.put(Integer.valueOf(6), new IClass(0.9, 0.1, 0.2));
+
+    // this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(1), new IClass(0.5, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(2), new IClass(0.9, 0.1, 0.2));
   }
 
   /**
@@ -389,7 +393,7 @@ public class ImageFactory extends Observable implements Runnable {
     Double oldEnergy = 0D;
 
     Double temp = this.startTemp;
-    Double tempRate = this.tempRate;
+    Double tempRate = this.coolingRate;
 
     Double sumEnergy = 0D;
 
@@ -433,6 +437,9 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
     }
+    setChanged();
+    notifyObservers("Gibbs sampler finished at iteration " + iterationsCounter + " with energy: "
+        + currentEnergy + ".");
   }
 
   public void metropolisSampler() {
@@ -444,11 +451,12 @@ public class ImageFactory extends Observable implements Runnable {
     RandomDataImpl randGen = new RandomDataImpl();
 
     Double temp = this.startTemp;
-    Double tempRate = this.tempRate;
+    Double tempRate = this.coolingRate;
 
     Double oldEnergy = 0D;
     Double deltaEnergy = 10000D;
     Double deltaEnergyMin = 0.01;
+    Double currentEnergy = getGlobalEnergy();
 
     Integer iterationsCounter = 0;
     while ((deltaEnergy > deltaEnergyMin) && (iterationsCounter < 20000)) {// stop when energy
@@ -456,7 +464,6 @@ public class ImageFactory extends Observable implements Runnable {
       // small
 
       deltaEnergy = 0D;
-      Double currentEnergy = getGlobalEnergy();
       for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
 
@@ -498,6 +505,9 @@ public class ImageFactory extends Observable implements Runnable {
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
     }// while
+    setChanged();
+    notifyObservers("Metropolis sampler finished at iteration " + iterationsCounter
+        + " with energy: " + currentEnergy + ".");
   }
 
   public void icm() {
@@ -506,7 +516,7 @@ public class ImageFactory extends Observable implements Runnable {
     Integer width = this.raster[0].length;
 
     Double temp = this.startTemp;
-    Double tempRate = this.tempRate;
+    Double tempRate = this.coolingRate;
 
     Double oldEnergy = 0D;
     Double currentEnergy = 0D;
@@ -536,13 +546,18 @@ public class ImageFactory extends Observable implements Runnable {
       iterationsCounter++;
 
       this.currentImage = generateSegmentedImage();
+
       setChanged();
       notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
           + currentEnergy + "E delta: " + deltaEnergy + "\n");
+
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
-
     }
+    setChanged();
+    notifyObservers("ICM algorithm finished at " + iterationsCounter + " iteration, T: " + temp
+        + " energy: " + currentEnergy + ".");
+
   }
 
   public void run() {
@@ -562,6 +577,7 @@ public class ImageFactory extends Observable implements Runnable {
 
   private void rjmcmcSampler() {
 
+    // collect useful variables
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
     Integer no_regions = this.classes.keySet().size();
@@ -569,7 +585,7 @@ public class ImageFactory extends Observable implements Runnable {
     RandomDataImpl randGen = new RandomDataImpl();
 
     Double temp = this.startTemp;
-    Double tempRate = this.tempRate;
+    Double tempRate = this.coolingRate;
 
     Double oldEnergy = 0D;
     Double deltaEnergy = 10000D;
@@ -622,18 +638,39 @@ public class ImageFactory extends Observable implements Runnable {
         }
       }// minimal pair search finished.
 
+      // probabilities of merge and split
+      Double pSplit = 0D;
+      Double pMerge = 0D;
+      IClass underSplitting = null;
+      ArrayList<IClass> splitClasses = null;
+
       if (this.classes.size() == this.minClasses) {
-        IClass underSplitting = this.classes.get(class2Split);
-        // choosing split here and getting new parameters
-        ArrayList<IClass> splitClasses = doSplit(underSplitting);
+        underSplitting = this.classes.get(class2Split);
+        splitClasses = doSplit(underSplitting);
+        pSplit = 1D;
+        pMerge = 0D;
       }
       else if (this.classes.size() == this.maxClasses) {
         IClass mergeClass = doMerge(this.classes.get(minClass1), this.classes.get(minClass2));
+        pSplit = 0D;
+        pMerge = 1D;
       }
       else {// here we need to decide which way to choose
-
+        underSplitting = this.classes.get(class2Split);
+        splitClasses = doSplit(underSplitting);
+        IClass mergeClass = doMerge(this.classes.get(minClass1), this.classes.get(minClass2));
+        pSplit = 0.5;
+        pMerge = 0.5;
       }
 
+      //
+      // now we have set up probabilities and having split and merge classes ready - let's do the
+      // job, first calculate acceptance probability.
+      //
+      if (pSplit > 0) {
+        Double P_realloc = ProbabilityOfReallocation(class2Split, splitClasses);
+
+      }
       temp = temp * tempRate; // decrease temperature
 
       iterationsCounter++;
@@ -645,6 +682,75 @@ public class ImageFactory extends Observable implements Runnable {
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
     }// while
+  }
+
+  private Double ProbabilityOfReallocation(Integer underSplitting, ArrayList<IClass> splitClasses) {
+
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+
+    Double currentP1 = 1D;
+    Double currentP2 = 1D;
+
+    Integer[][] tempLabels = new Integer[height][width];
+
+    Double[][] probHolder = new Double[height][width];
+
+    TreeMap<Integer, IClass> tmpClasses = new TreeMap<Integer, IClass>();
+
+    for (Integer i : this.classes.keySet()) {
+      if (!i.equals(underSplitting)) {
+        tmpClasses.put(i, this.classes.get(i));
+      }
+    }
+    Integer label1 = underSplitting;
+    Integer label2 = tmpClasses.size();
+    tmpClasses.put(label1, splitClasses.get(0));
+    tmpClasses.put(label2, splitClasses.get(1));
+
+    // resegment image using new set of classes
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        for (Integer c : tmpClasses.keySet()) {
+          IClass cls = tmpClasses.get(c);
+          Double pixel = this.original_raster[i][j] / 255D;
+          Double p = cls.getPValue(pixel);
+          if (null == probHolder[i][j]) {
+            tempLabels[i][j] = c;
+            probHolder[i][j] = p;
+          }
+          else if (probHolder[i][j] < p) {
+            tempLabels[i][j] = c;
+            probHolder[i][j] = p;
+          }
+        }// integer c
+
+      }// i
+    }// j
+
+    // now calculate probabilities
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        if(labels[i][j].equals(label1)||labels[i][j].equals(label2)){
+          if(labels[i][j].equals(label1)){
+            IClass wPlus = tmpClasses.get(label1);
+          }else{
+            IClass wPlus = tmpClasses.get(label2);
+          }
+          Double m = tmpClasses.get(label1).getMean();
+          Double s = tmpClasses.get(label1).getStDev();
+          Double p = tmpClasses.get(label1).getWeight();
+          Double f = ((Short)this.original_raster[i][j]).doubleValue()/255;
+          
+          Double part1 = 1/(Math.sqrt(Math.pow(2*Math.PI,3) * s));
+          part1 = part1 * Math.exp(-1/2*(f-m)*(1/s)*(f-m));
+          Double part2 = p*Math.exp(-this.beta)  
+
+        }
+      }//i
+    }//j
+
+    return null;
   }
 
   private IClass doMerge(IClass class1, IClass class2) {
@@ -663,29 +769,36 @@ public class ImageFactory extends Observable implements Runnable {
    */
   private ArrayList<IClass> doSplit(IClass underSplitting) {
 
-    RandomDataImpl randGen = new RandomDataImpl();
+    try {
+      RandomDataImpl randGen = new RandomDataImpl();
 
-    Double m_old = underSplitting.getMean();
-    Double l_old = underSplitting.getStDev();
-    // generating sets of random variables and getting parameters for the + class
-    // BETA RANDOM FUNCTION NEED TO BE IMPLEMENTED
-    Double u1 = randGen.nextUniform(0D, 1D);
-    Double p_lambda1 = l_old * u1;
-    Double p_lambda2 = l_old * (1 - u1);
+      Double m_old = underSplitting.getMean();
+      Double l_old = underSplitting.getStDev();
+      // generating sets of random variables and getting parameters for the + class
+      // BETA RANDOM FUNCTION NEED TO BE IMPLEMENTED
+      Double u1 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+      Double p_lambda1 = l_old * u1;
+      Double p_lambda2 = l_old * (1 - u1);
 
-    Double u2 = randGen.nextUniform(0D, 1D);
-    Double m_lambda1 = m_old + u2 * Math.sqrt(l_old * ((1 - u1) / u1));
-    Double m_lambda2 = m_old - u2 * Math.sqrt(l_old * (u1 / (1 - u1)));
+      Double u2 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+      Double m_lambda1 = m_old + u2 * Math.sqrt(l_old * ((1 - u1) / u1));
+      Double m_lambda2 = m_old - u2 * Math.sqrt(l_old * (u1 / (1 - u1)));
 
-    Double u3 = randGen.nextUniform(0D, 1D);
-    Double l_lambda1 = u3 * (1 - u2 * u2) * l_old * (1 / u1);
-    Double l_lambda2 = (1 - u3) * (1 - u2 * u2) * l_old * (1 / u1);
+      Double u3 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+      Double l_lambda1 = u3 * (1 - u2 * u2) * l_old * (1 / u1);
+      Double l_lambda2 = (1 - u3) * (1 - u2 * u2) * l_old * (1 / u1);
 
-    ArrayList<IClass> res = new ArrayList<IClass>();
-    // public IClass(Double mean, Double stdev, Double weight) {
-    res.add(new IClass(m_lambda1, l_lambda1, p_lambda1));
-    res.add(new IClass(m_lambda2, l_lambda2, p_lambda2));
-    return res;
+      ArrayList<IClass> res = new ArrayList<IClass>();
+      // public IClass(Double mean, Double stdev, Double weight) {
+      res.add(new IClass(m_lambda1, l_lambda1, p_lambda1));
+      res.add(new IClass(m_lambda2, l_lambda2, p_lambda2));
+      return res;
+    }
+    catch (MathException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return null;
 
   }
 
@@ -702,6 +815,43 @@ public class ImageFactory extends Observable implements Runnable {
         * (class2.getMean() - class1.getMean());
 
     return part1 + part2;
+  }
+
+  /**
+   * Sets starting temperature.
+   * 
+   * @param startTemperature temperature.
+   */
+  public void setStartTemperature(Double startTemperature) {
+    this.startTemp = startTemperature;
+  }
+
+  /**
+   * Sets cooling schedule.
+   * 
+   * @param temperatureSchedule cooling rate.
+   */
+  public void setCoolingSchedule(Double temperatureSchedule) {
+    this.coolingRate = temperatureSchedule;
+
+  }
+
+  /**
+   * Reports starting temperature.
+   * 
+   * @return starting temperature.
+   */
+  public Double getStartTemperature() {
+    return this.startTemp;
+  }
+
+  /**
+   * Reports cooling rate.
+   * 
+   * @return cooling rate.
+   */
+  public Double getCoolingRate() {
+    return this.coolingRate;
   }
 
 }

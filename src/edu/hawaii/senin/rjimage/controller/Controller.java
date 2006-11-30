@@ -63,6 +63,10 @@ public class Controller {
   private class RunGibbsListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       imageFactory.setMethod("gibbs");
+      imageFactory.setStartTemperature(view.getStartTemperature());
+      imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
+          + ", cooling rate: " + imageFactory.getCoolingRate());
       new Thread(imageFactory).start();
     }
   }
@@ -70,6 +74,10 @@ public class Controller {
   private class RunICMListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       imageFactory.setMethod("icm");
+      imageFactory.setStartTemperature(view.getStartTemperature());
+      imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
+          + ", cooling rate: " + imageFactory.getCoolingRate());
       new Thread(imageFactory).start();
     }
   }
@@ -77,21 +85,28 @@ public class Controller {
   private class RunMetropolisListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       imageFactory.setMethod("metropolis");
+      imageFactory.setStartTemperature(view.getStartTemperature());
+      imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
+          + ", cooling rate: " + imageFactory.getCoolingRate());
       new Thread(imageFactory).start();
     }
   }
 
   private class RunRJListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
+      imageFactory.setStartTemperature(view.getStartTemperature());
+      imageFactory.setCoolingSchedule(view.getCoolingSchedule());
       imageFactory.setMethod("rjmcmc");
+      view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
+          + ", cooling rate: " + imageFactory.getCoolingRate());
       new Thread(imageFactory).start();
     }
-  }  
-  
+  }
+
   private class StopSimulationListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      imageFactory.setMethod("metropolis");
-      new Thread(imageFactory).start();
+      view.addToLog("THIS FUNCTION IS NOT YET IMPLEMENTED");
     }
   }
 
