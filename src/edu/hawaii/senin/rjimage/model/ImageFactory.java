@@ -698,6 +698,7 @@ public class ImageFactory extends Observable implements Runnable {
 
     TreeMap<Integer, IClass> tmpClasses = new TreeMap<Integer, IClass>();
 
+    // extracting only splitted class
     for (Integer i : this.classes.keySet()) {
       if (!i.equals(underSplitting)) {
         tmpClasses.put(i, this.classes.get(i));
@@ -728,27 +729,68 @@ public class ImageFactory extends Observable implements Runnable {
       }// i
     }// j
 
+    // we will need energy of the splitted field.
+    Double energy = 0.0;
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        Integer cls = tempLabels[i][j];
+        Double e = 0D;
+        if (cls.equals(label1) || cls.equals(label2)) {
+          if (i != height - 1) // south
+          {
+            if (cls == tempLabels[i + 1][j])
+              e -= beta;
+            else
+              e += beta;
+          }
+          if (j != width - 1) // east
+          {
+            if (cls == tempLabels[i][j + 1])
+              e -= beta;
+            else
+              e += beta;
+          }
+          if (i != 0) // nord
+          {
+            if (cls == tempLabels[i - 1][j])
+              e -= beta;
+            else
+              e += beta;
+          }
+          if (j != 0) // west
+          {
+            if (cls == this.labels[i][j - 1])
+              e -= beta;
+            else
+              e += beta;
+          }
+        }// if cls==...
+        energy += e;
+      }// i
+    }// j
+    //############################
     // now calculate probabilities
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
-        if(labels[i][j].equals(label1)||labels[i][j].equals(label2)){
-          if(labels[i][j].equals(label1)){
+        if (labels[i][j].equals(label1) || labels[i][j].equals(label2)) {
+          if (labels[i][j].equals(label1)) {
             IClass wPlus = tmpClasses.get(label1);
-          }else{
+          }
+          else {
             IClass wPlus = tmpClasses.get(label2);
           }
           Double m = tmpClasses.get(label1).getMean();
           Double s = tmpClasses.get(label1).getStDev();
           Double p = tmpClasses.get(label1).getWeight();
-          Double f = ((Short)this.original_raster[i][j]).doubleValue()/255;
-          
-          Double part1 = 1/(Math.sqrt(Math.pow(2*Math.PI,3) * s));
-          part1 = part1 * Math.exp(-1/2*(f-m)*(1/s)*(f-m));
-          Double part2 = p*Math.exp(-this.beta)  
+          Double f = ((Short) this.original_raster[i][j]).doubleValue() / 255;
+
+          Double part1 = 1 / (Math.sqrt(Math.pow(2 * Math.PI, 3) * s));
+          part1 = part1 * Math.exp(-1 / 2 * (f - m) * (1 / s) * (f - m));
+          Double part2 = p*Math.exp(-energy);
 
         }
-      }//i
-    }//j
+      }// i
+    }// j
 
     return null;
   }
