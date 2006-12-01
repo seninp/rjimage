@@ -3,7 +3,6 @@ package edu.hawaii.senin.rjimage.model;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -376,6 +375,8 @@ public class ImageFactory extends Observable implements Runnable {
    */
   public void gibbsSampler() {
 
+    Long startTime = System.currentTimeMillis();
+
     resegmentImage();
     setChanged();
     notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
@@ -437,9 +438,19 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
     }
+    Long endTime = System.currentTimeMillis();
     setChanged();
     notifyObservers("Gibbs sampler finished at iteration " + iterationsCounter + " with energy: "
-        + currentEnergy + ".");
+        + currentEnergy + ".\n");
+
+    Long totalTime = endTime - startTime;
+    Integer hours = Math.round(totalTime / 3600000);
+    Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
+    Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
+    setChanged();
+    notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
+        + " sec.\n");
+
   }
 
   public void metropolisSampler() {
@@ -669,6 +680,8 @@ public class ImageFactory extends Observable implements Runnable {
       //
       if (pSplit > 0) {
         Double P_realloc = ProbabilityOfReallocation(class2Split, splitClasses);
+        // Double P_splitted = ProbabilityOfSplitted();
+        // Double P_current = ProbabilityOfCurrent();
 
       }
       temp = temp * tempRate; // decrease temperature
@@ -768,8 +781,10 @@ public class ImageFactory extends Observable implements Runnable {
         energy += e;
       }// i
     }// j
-    //############################
+    // ############################
     // now calculate probabilities
+    Double pRealloc1 = 0D;
+    Double pRealloc2 = 0D;
     for (int i = 0; i < height; ++i) {
       for (int j = 0; j < width; ++j) {
         if (labels[i][j].equals(label1) || labels[i][j].equals(label2)) {
@@ -786,13 +801,13 @@ public class ImageFactory extends Observable implements Runnable {
 
           Double part1 = 1 / (Math.sqrt(Math.pow(2 * Math.PI, 3) * s));
           part1 = part1 * Math.exp(-1 / 2 * (f - m) * (1 / s) * (f - m));
-          Double part2 = p*Math.exp(-energy);
-
+          Double part2 = p * Math.exp(-energy);
+          pRealloc1 *= part1;
+          pRealloc2 *= part2;
         }
       }// i
     }// j
-
-    return null;
+    return pRealloc1 * pRealloc2;
   }
 
   private IClass doMerge(IClass class1, IClass class2) {

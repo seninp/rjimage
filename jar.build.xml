@@ -9,8 +9,8 @@
     <copy todir="${jar.dir}">
       <fileset dir="${build.dir}/classes" />
     </copy>
-    <mkdir dir="${jar.dir}/edu/hawaii/senin/util/images" />
-    <copy todir="${jar.dir}/edu/hawaii/senin/util/images">
+    <mkdir dir="${jar.dir}/images" />
+    <copy todir="${jar.dir}/images">
       <fileset dir="${basedir}/images" />
     </copy>
     <unjar src="${lib.dir}/jar/swingmiglayout15.jar" dest="${jar.dir}" />
