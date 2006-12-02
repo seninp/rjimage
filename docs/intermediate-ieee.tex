@@ -316,7 +316,7 @@
 
 
 \begin{abstract}
-While the ultimate goal of this project was to build an Reversible Jump MCMC sampler for image segmentation the others methods such as ICM, Gibbs sampler, Metropolis sampler and Simulated Annealing are necessary milestones in order to meet the goal. So far all milestones are implemented while RJMCMC sampler itself is not done - the acceptance of the split or joining of classes are not finished. Being crucial in RJMCMC method, this part prevents from successful project closure. Nevertheless author believe that it could and would be done in short time after 5th of December of 2006. If not the idea could be picked by anyone interested in this stuff at http://code.google.com/p/rjimage/. This is SVN repository URL that contains this documents along with software implementation.
+While the ultimate goal of this project was to build a Reversible Jump MCMC sampler for image segmentation the others methods such as ICM, Gibbs sampler, Metropolis sampler and Simulated Annealing arised as a necessary milestones in order to meet the goal. So far all milestones are implemented while RJMCMC sampler itself is not done - the acceptance probability of the split or joining of classes is not finished. Being crucial in RJMCMC method, this part prevents from successful project closure. Nevertheless author believe that it could and would be done in short time after 5th of December of 2006. If not, the way and idea are well expressed in cited articles, this report and provided to the public source code at http://code.google.com/p/rjimage/. This is SVN repository URL that contains this documents along with software implementation.
 \end{abstract}
 
 \begin{keywords}
@@ -335,18 +335,18 @@ RJMCMC, image segmentation, Gibbs sampler, ICM, Metropolis sampler.
 
 \section{Model design}
 \subsection{Introduction}
-\PARstart{I}{n} the core of this work lies publication [1] by Zoltan Kato "Bayesian Color image segmentation using reversible jump Markov Chain Monte-Carlo". Method described by author deals with the problem of unsupervised image segmentation. It means that it should accept an image as the only input parameter and produce a segmented image representation as output. The method itself relies on the use of a firs-order Markov Field (MRF, Plotts model) and employs ICM algorithm [2], Gibbs sampler [3], and Metropolis sampler[4] along with optimization criteria based on Simulated annealing algorithm.
+\PARstart{I}{n} the core of this work lies my own interest for the RJMCMC and publication [1] by Zoltan Kato "Bayesian Color image segmentation using reversible jump Markov Chain Monte-Carlo". I have chosed easiest way to go - grayscale, but as could be seen it doesn't really matter, the results could be easily elevated to color images encoded in any chosen color space. RJMCMC method described by Green [5] and used by Kato [1] deals with the problem of unsupervised image segmentation. It means that it should accept an image as the only input parameter and produce a segmented image representation as output. The method itself relies on the use of a firs-order Markov Field (MRF, Plotts model) and employs ICM algorithm [2], Gibbs sampler [3], and Metropolis sampler [4] along with optimization criteria based on Simulated annealing algorithm.
 
-As I already written in the project proposal and intermediate report, the image segmentation is one of the fundamental problems in computer vision and lies an the first-row low-level tasks for full image processing like surface description, object recognition, content bases indexing etc. 
+As I already written in the project proposal and intermediate report, the image segmentation is one of the fundamental problems in computer vision and lies an the first-row low-level tasks for full line of image processing like surface description, object recognition, content bases indexing etc. 
 
-I believe that Reversible Jump mimics natural human ability to segment images that are noisy or have very little features to do segmentation exactly. Basically this method search within the multidimensional variants space trying to maximize classes separation. The approach itself seems to be heavyweight and computationally costly, but second reason to choose this way is my own interest in understanding of unsupervised learning and ICA. 
+I believe that Reversible Jump mimics natural human ability to segment images that are noisy or have very little features to do segmentation exactly. I think that humans also just trying some segmentation and choose the most probable one using their experience. Basically RJMCMC method search within the multidimensional variants space trying to maximize classes separation. The approach itself seems to be heavyweight and computationally costly, but second reason to choose this as I mentioned is my own interest in understanding of unsupervised learning and ICA. 
 
-At the beginning I was considering R (or 'GNU S'), a freely available language and environment for statistical computing and graphics as the programming environment. The taken choice was erroneous, despite well supported and having numerous libraries for image IO and raster manipulations, the R itself is extremely slow in matrix processing and has certain limitations in software design due to namespace, plain code execution and lack of debugger along with IDE development. The lesson learned from this try is that while R is the ultimate "statistic" calculator (due to numerous packages) along with great plotting capabilities, it is more appropriate for single task solving, not for the routine program development, debug and refactoring of the code.
+At the beginning I was considering R (or 'GNU S'), a freely available language and environment for statistical computing and graphics as the programming environment. The taken choice was erroneous, despite being well supported and having numerous libraries for image IO and raster manipulations along with unlimited statistical tools, the R is extremely slow in matrix processing and has certain limitations in software design due to common namespace, plain code execution and lack of an IDE and debugger. The lesson learned from this failure is that while R is the ultimate "statistic" calculator (due to numerous packages) along with great plotting capabilities, it is more appropriate for single task solving, or conceptual coding, not for the routine program development, debug and evolution of software.
 
-My second choice was Java and so far it provides desired functionality and flexibility. The software that done for the project is perfectly working, and could be easily debugged and extended in any desired way.
+My second choice was Java and so far it provides desired functionality and flexibility. The software that done for the project is perfectly working, has nice GUI and could be easily debugged and extended in any desired way.
 
 \subsection{Model design}
-According $\left[1\right]$, the observed image is: $\textsl{F} = \left\{ \vec{f}_{s} \left| s \in \textsl{S}, \forall i : 0 < \vec{f}^{i}_{s} < 1 \right. \right\}$,
+According [1], the observed image is: $\textsl{F} = \left\{ \vec{f}_{s} \left| s \in \textsl{S}, \forall i : 0 < \vec{f}^{i}_{s} < 1 \right. \right\}$,
 where vector $\vec{f}_{s}$ is vector that carried intensity of color for pixel s. The segmentation itself is just labeling of each pixel $s \in S$ by label $\omega_{s} \in \Lambda = \left\{ 1,2,...,L \right\}$. $\omega\in\Omega$ denotes a labeling (or segmentation), $\Omega$ is a set of all possible labeling.
 
 We regard our image as a sample drawn from unknown Gaussian mixture distribution. The goal of our analysis is inference about the number 
@@ -381,17 +381,24 @@ The pixel classes (segmentation itself) represented as a multivariate Gaussian d
 Previous equation could be factored out as:
 \begin{equation}
 \left(F\left|\right.\omega,\Theta,\beta,p,L\right) = 
-P\left(F\left|\right.\omega,\Theta\right)=$$
+P\left(F\left|\right.\omega,\Theta\right)=
+$$
 \par
-$\prod_{s \in S}
+$
+\begin{flushleft}
+\prod_{s \in S}
 \left(\frac{1}{\sqrt{\left(2\pi\right)^{3}\left|\sum_{\omega_{s}}\right|}}
 \exp\left(
 -\frac{1}{2}
-\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right) \right.\times $$
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right) \right.\times
+\end{flushleft}
+ $$
 \par
-$\left.\left.\sum_{\omega_{s}}^{-1}
+$
+\left.\left.\sum_{\omega_{s}}^{-1}
 \left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T \right)\right)
 \end{equation}
+
 
 Proceeding further we have:
 \begin{equation}
@@ -610,7 +617,7 @@ P\left(p_{\lambda}\right)p_{\lambda}^{\left|S_{\lambda}\right|} \times
 As already mentioned this model has $\beta$ parameter fixed a priory. The value chosen is 2.5.
 
 \section{Estimating Number of classes}
-Herein, the cornerstone of the method goes. That this move type involves changing $L$ by $1$ and making necessary corresponding changes to $\omega,\Theta $ and $p$. Should be noted that right before this move all posterior distribution from equation (8) is already sampled, $\beta$ is set to its value and we have following distribution (from Equation (8)):
+Herein, the cornerstone of the method goes. This move type involves changing $L$ by $1$ and making necessary corresponding changes to $\omega,\Theta $ and $p$. Should be noted that right before this move all posterior distribution from equation (8) is already sampled, $\beta$ is set to its value and we have following distribution (from Equation (8)):
 \begin{equation}
 P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) = 
 $$
@@ -795,14 +802,14 @@ In this section I will describe in short algorithm that summarizes all the above
  
 \hfill \date{\today}
 
-\subsection{Subsection Heading Here}
-Subsection text here.
+%\subsection{Subsection Heading Here}
+%Subsection text here.
 
 % needed in second column of first page if using \pubid
 %\pubidadjcol
 
-\subsubsection{Subsubsection Heading Here}
-Subsubsection text here.
+%\subsubsection{Subsubsection Heading Here}
+%Subsubsection text here.
 
 % Reminder: the "draftcls" or "draftclsnofoot", not "draft", class option
 % should be used if it is desired that the figures are to be displayed while
@@ -890,19 +897,19 @@ The conclusion goes here.
 %\useRomanappendicesfalse
 %
 \appendices
-\section{Proof of the First Zonklar Equation}
-Appendix one text goes here.
+\section{Demo software usage}
+The coded software is accessible with source codes at http://code.google.com/p/rjimage/. For the compilation and correct work it needs at least Java 1.5 and Ant 1.7 installed at system. So far it correctly works with grayscale (byte for pixel) images and demonstrates the ICM algorithm, Gibbs sampler and Metropolis-Hasting sampler. The RJMCMC methos as I have mentioned is almost done, I am stuck figuring out those $u$'s used in acceptance probability, once it would be over the joy of running RJMCMC algorithm would be provided to community.
 
 % you can choose not to have a title for an appendix
 % if you want by leaving the argument blank
-\section{}
-Appendix two text goes here.
+%\section{}
+%Appendix two text goes here.
 
 % use section* for acknowledgement
-\section*{Acknowledgment}
+%\section*{Acknowledgment}
 % optional entry into table of contents (if used)
 %\addcontentsline{toc}{section}{Acknowledgment}
-The authors would like to thank...
+%The authors would like to thank...
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
