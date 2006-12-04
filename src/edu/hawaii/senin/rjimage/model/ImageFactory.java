@@ -3,7 +3,9 @@ package edu.hawaii.senin.rjimage.model;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -43,11 +45,11 @@ public class ImageFactory extends Observable implements Runnable {
   /**
    * Holds original image raster in short format, grey intensity level from 0-255.
    */
-  private short[][] original_raster;
+  private short[][] originalRaster;
   /**
    * Holds image that in the process of segmentation.
    */
-  private BufferedImage currentImage;
+  private BufferedImage image;
   /**
    * Holds current image raster USHORT type
    */
@@ -121,19 +123,17 @@ public class ImageFactory extends Observable implements Runnable {
     try {
       this.originalImage = ImageIO.read(selectedFile);
       int imageType = originalImage.getType();
-      if (imageType == BufferedImage.TYPE_BYTE_GRAY) {
-        this.currentImage = null;
-        this.original_raster = null;
-        this.raster = null;
-        this.labels = null;
-        this.classes = new TreeMap<Integer, IClass>();
-        resetSegmentation();
-      }
-      else {
+      if (imageType != BufferedImage.TYPE_BYTE_GRAY) {
         this.originalImage = toGrayScale(this.originalImage);
         setChanged();
         notifyObservers(ImageFactoryStatus.INVALID_IMAGE);
       }
+      this.image = null;
+      this.originalRaster = null;
+      this.raster = null;
+      this.labels = null;
+      this.classes = new TreeMap<Integer, IClass>();
+      resetSegmentation();
     }
     catch (IOException e) {
       e.printStackTrace();
@@ -162,7 +162,7 @@ public class ImageFactory extends Observable implements Runnable {
     // refresh all needed variables
     this.labels = new Integer[height][width];
     this.raster = new short[height][width];
-    this.original_raster = new short[height][width];
+    this.originalRaster = new short[height][width];
 
     byte[][] rasterIntermediate = new byte[height][width];
     short[][] rasterPlain = new short[height][width];
@@ -178,7 +178,7 @@ public class ImageFactory extends Observable implements Runnable {
       for (int j = 0; j < width; j++) {
         rasterPlain[i][j] = rasterIntermediate[i][j];
         rasterPlain[i][j] &= 0xff;// shift from "-128...+127" to "0...255"
-        this.original_raster[i][j] = rasterPlain[i][j];
+        this.originalRaster[i][j] = rasterPlain[i][j];
       }
     }
     //
@@ -214,7 +214,7 @@ public class ImageFactory extends Observable implements Runnable {
   public void resetSegmentation() {
     resetClasses();
     resegmentImage();
-    this.currentImage = generateSegmentedImage();
+    this.image = generateSegmentedImage();
     setChanged();
     notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
   }
@@ -254,8 +254,8 @@ public class ImageFactory extends Observable implements Runnable {
    * @return "in process" segmented image.
    */
   public Image getCurrentImage() {
-    this.currentImage = generateSegmentedImage();
-    return this.currentImage;
+    this.image = generateSegmentedImage();
+    return this.image;
   }
 
   /**
@@ -265,11 +265,53 @@ public class ImageFactory extends Observable implements Runnable {
    * @return grayscale image.
    */
   public BufferedImage toGrayScale(BufferedImage image) {
+    // BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(),
+    // BufferedImage.TYPE_USHORT_GRAY);
+    // Graphics2D g = result.createGraphics();
+    // g.drawRenderedImage(image, null);
+    // g.dispose();
+    // return result;
+
+    // grey = (3*red + 6*green + blue)/10;
     BufferedImage result = new BufferedImage(image.getWidth(), image.getHeight(),
-        BufferedImage.TYPE_USHORT_GRAY);
-    Graphics2D g = result.createGraphics();
-    g.drawRenderedImage(image, null);
-    g.dispose();
+        BufferedImage.TYPE_BYTE_GRAY);
+    ColorSpace grayColorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY);
+    ColorConvertOp colorConvertOp = new ColorConvertOp(grayColorSpace, null);
+    colorConvertOp.filter(image, result);
+
+    Raster raster = image.getRaster();
+    Integer height = raster.getHeight();
+    Integer width = raster.getWidth();
+
+    // Raster rasterGary = result.getRaster();
+    // byte[] dataGray = new byte[height * width];
+    // int[][] dataColor = new int[height][width];
+    //
+    // for (int j = 0; j < width; j++) {
+    // raster.getDataElements(j, 0, 1, height, dataColor[j]);
+    // }
+    //
+    // // making it "byte"
+    // for (int i = 0; i < height; i++) {
+    // for (int j = 0; j < width; j++) {
+    // int rgb = dataColor[i][j];
+    // int r = (rgb >> 16) & 0xff;
+    // int g = (rgb >> 8) & 0xff;
+    // int b = (rgb) & 0xff;
+    // int gray = (r * 30 + g * 59 + b * 11) / 100;
+    // // return the color code of the new color
+    // // return (rgb & 0xff000000) | (gray<<16) | (gray<<8) | (gray);
+    // dataGray[i * width + j] = ((Integer) ((3 * r + 6 * g + b) / 10)).byteValue();
+    // }
+    // }
+    //
+    // ColorModel ccm = result.getColorModel();
+    // SampleModel csm = result.getSampleModel();
+    // DataBuffer dataBuf = new DataBufferByte(dataGray, width);
+    // WritableRaster wr = Raster.createWritableRaster(csm, dataBuf, new Point(0, 0));
+    // Hashtable<String, String> ht = new Hashtable<String, String>();
+    // ht.put("owner", "Senin Pavel");
+    // return new BufferedImage(ccm, wr, true, ht);
 
     return result;
   }
@@ -288,7 +330,7 @@ public class ImageFactory extends Observable implements Runnable {
     // return log(sqrt(2.0*3.141592653589793*variance[label])) +
     // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
     return Math.log(Math.sqrt(2.0 * Math.PI * s))
-        + Math.pow(this.original_raster[i][j] / 255D - m, 2) / (2.0 * s);
+        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
   }
 
   /**
@@ -434,7 +476,7 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
           + currentEnergy + "E delta: " + deltaEnergy + "\n");
-      this.currentImage = generateSegmentedImage();
+      this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
     }
@@ -511,7 +553,7 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
           + currentEnergy + "E delta: " + deltaEnergy + "\n");
-      this.currentImage = generateSegmentedImage();
+      this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
@@ -556,7 +598,7 @@ public class ImageFactory extends Observable implements Runnable {
 
       iterationsCounter++;
 
-      this.currentImage = generateSegmentedImage();
+      this.image = generateSegmentedImage();
 
       setChanged();
       notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
@@ -603,9 +645,8 @@ public class ImageFactory extends Observable implements Runnable {
     Double deltaEnergyMin = 0.01;
 
     Integer iterationsCounter = 0;
+    // stop when energy change is small
     while ((deltaEnergy > deltaEnergyMin) && (iterationsCounter < 20000)) {// stop when energy
-      // change is
-      // small
 
       deltaEnergy = 0D;
       Double currentEnergy = getGlobalEnergy();
@@ -616,38 +657,14 @@ public class ImageFactory extends Observable implements Runnable {
       this.resegmentImage();
 
       // ######## MOVE 2.
-      // check the deviation within segmentation
-      Double rnd = randGen.nextUniform(0D, 1D);
       // we choose class to split by uniform distribution.
+      Double rnd = randGen.nextUniform(0D, 1D);
       Integer class2Split = ((Double) (rnd / (1 / ((Integer) this.classes.size()).doubleValue())))
           .intValue();
-      // we are choosing merging classes probability using calculations according Kato article
-      // (5.17)
-      Double distanceSum = 0D;
-      for (Integer cls : this.classes.keySet()) {
-        for (int c = 0; c < this.classes.size(); c++) {
-          if (!cls.equals(c)) {
-            distanceSum += mahalanobisDistance(cls, c);
-          }
-        }
-      }// so we have calculated the sum of all distances
-      // go find the minimal pair.
+      // we choose classes by minimal Minkovsky distance
       Integer minClass1 = 0;
-      Integer minClass2 = 1;
-      Double tmpDist = mahalanobisDistance(minClass1, minClass2);
-      Double minDist = tmpDist;
-      for (Integer cls : this.classes.keySet()) {
-        for (int c = 0; c < this.classes.size(); c++) {
-          if (!cls.equals(c)) {
-            tmpDist = mahalanobisDistance(cls, c);
-            if (tmpDist < minDist) {
-              minDist = tmpDist;
-              minClass1 = cls;
-              minClass2 = c;
-            }
-          }
-        }
-      }// minimal pair search finished.
+      Integer minClass2 = 0;
+      getMergeCandidate(minClass1, minClass2);
 
       // probabilities of merge and split
       Double pSplit = 0D;
@@ -690,11 +707,40 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
           + currentEnergy + "E delta: " + deltaEnergy + "\n");
-      this.currentImage = generateSegmentedImage();
+      this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
     }// while
+  }
+
+  private void getMergeCandidate(Integer minClass1, Integer minClass2) {
+    // we are choosing merging classes probability using calculations according Kato article
+    // (5.17)
+    Double distanceSum = 0D;
+    for (Integer cls : this.classes.keySet()) {
+      for (int c = 0; c < this.classes.size(); c++) {
+        if (!cls.equals(c)) {
+          distanceSum += mahalanobisDistance(cls, c);
+        }
+      }
+    }// so we have calculated the sum of all distances
+    // go find the minimal pair.
+    Double tmpDist = mahalanobisDistance(minClass1, minClass2);
+    Double minDist = tmpDist;
+    for (Integer cls : this.classes.keySet()) {
+      for (int c = 0; c < this.classes.size(); c++) {
+        if (!cls.equals(c)) {
+          tmpDist = mahalanobisDistance(cls, c);
+          if (tmpDist < minDist) {
+            minDist = tmpDist;
+            minClass1 = cls;
+            minClass2 = c;
+          }
+        }
+      }
+    }// minimal pair search finished.
+
   }
 
   private Double ProbabilityOfReallocation(Integer underSplitting, ArrayList<IClass> splitClasses) {
@@ -727,7 +773,7 @@ public class ImageFactory extends Observable implements Runnable {
       for (int j = 0; j < width; ++j) {
         for (Integer c : tmpClasses.keySet()) {
           IClass cls = tmpClasses.get(c);
-          Double pixel = this.original_raster[i][j] / 255D;
+          Double pixel = this.originalRaster[i][j] / 255D;
           Double p = cls.getPValue(pixel);
           if (null == probHolder[i][j]) {
             tempLabels[i][j] = c;
@@ -797,7 +843,7 @@ public class ImageFactory extends Observable implements Runnable {
           Double m = tmpClasses.get(label1).getMean();
           Double s = tmpClasses.get(label1).getStDev();
           Double p = tmpClasses.get(label1).getWeight();
-          Double f = ((Short) this.original_raster[i][j]).doubleValue() / 255;
+          Double f = ((Short) this.originalRaster[i][j]).doubleValue() / 255;
 
           Double part1 = 1 / (Math.sqrt(Math.pow(2 * Math.PI, 3) * s));
           part1 = part1 * Math.exp(-1 / 2 * (f - m) * (1 / s) * (f - m));
