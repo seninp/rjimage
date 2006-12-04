@@ -1,85 +1,88 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-  <head>
-    <title>Stack README</title>
-  </head>
+<head>
+<title>Untitled Document</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
 
-  <body>
-<center>
-<h1> ReadMe</h1>
-<A HREF="mailto:johnson@hawaii.edu">Philip Johnson</A> <br>
-<A HREF="http://csdl.ics.hawaii.edu/">Collaborative Software Development Laboratory</A><br>
-<A HREF="http://www.hawaii.edu/">University of Hawaii<br>
-</A>
-<p>
-</center>
-
-This file introduces you to the
-major components of this software package. It includes information on the
-contents of the package you have downloaded, instructions on how to install the
-system, basic invocation and usage, user documentation, developer documentation,
-and contact coordinates for further information.</p>
-
+<body>
+<h1>RJimage project.</h1>
+<p>The fancy name <strong>RJimage</strong> came from <strong>R</strong>eversible 
+  <strong>J</strong>ump Markov Chain MonteCarlo <strong>Image </strong>segmentation.</p>
+  
+<p><strong>Author: Pavel Senin.<a href="mailto:senin@hawaii.edu">senin at hawaii 
+  edu</a></strong></p>
+<p>This file introduces you to the major components of this software package. It includes information on the
+contents of the package you have downloaded, instructions on how to install the system, basic invocation and 
+usage, user documentation, developer documentation, and contact coordinates for further information.</p>
 
 <h2>A. Contents of this package</h2>
-<table width="735" border="1">
-<tr><th align="center" valign="top" width="93">Directory/File <th valign="top" width="626">Contents
-<tr><td align="center" valign="top" width="93">.
-    <td valign="top" width="626"> Top-level directory files include::
-    <ul>
-    <li> README.html (this document)
-    <li> build.xml (contains basic build targets and property definitions)
-    <li> dist.build.xml (creates a distribution package)
-    <li> junit.build.xml (runs junit)
-    <li> tomcat.build.xml (manages web app deployment to Tomcat)
-    <li> emma.build.xml (runs emma)
-    <li>there may also be other *.build.xml files.&nbsp;</li>
-    </ul>
-
-<tr><td align="center" valign="top" width="93">./lib
-    <td valign="top" width="626">Contains data files used to build and/or run the system:
+		
+<table width="90%" border="1">
+  <tr> 
+    <th align="center" valign="top" width="93">Directory/File 
+    <th valign="top" width="626">Contents 
+  <tr> 
+    <td align="center" valign="top" width="93">. 
+    <td valign="top" width="626"> Top-level directory files include:: 
       <ul>
-        <li>checkstyle/checkstyle.modules.xml&nbsp;&nbsp; contains checkstyle
+        <li> README.html (this document) 
+        <li>analyze.build.xml (a verify and reporting build target.) 
+        <li> build.xml (contains basic build targets and property definitions) 
+        <li> dist.build.xml (creates a distribution package) 
+        <li> junit.build.xml (runs junit) 
+        <li> emma.build.xml (runs emma) 
+        <li>there may also be other *.build.xml files.&nbsp;</li>
+      </ul>
+  <tr> 
+    <td align="center" valign="top" width="93">./lib 
+    <td valign="top" width="626">Contains data files used to build and/or run 
+      the system: 
+      <ul>
+        <li>checkstyle/checkstyle.modules.xml&nbsp;&nbsp; contains checkstyle 
           customizations.</li>
         <li>pmd/pmd.rulesets.xml contains pmd customizations</li>
         <li>findbugs/findbugs.rulesets.xml contains findbugs customizations.</li>
+        <li>commons/commons-math-1.1.jar contains Jakarta Common Math library.</li>
+        <li>swingmiglayout/swingmiglayout15.jar contains SWING MIG layout library 
+          for GUI build.</li>
       </ul>
-<tr>
-  <td align="center" valign="top" width="93">./doc
-    <td valign="top" width="626">Contains developer documentation including:
+  <tr> 
+    <td align="center" valign="top" width="93">./doc 
+    <td valign="top" width="626">Contains developer documentation including: 
       <ul>
-        <li><a href="doc/LicenseInfo.html">LicenseInfo.html</a> provides
-          licenses for use of all software included with this system.</li>
-        <li><a href="doc/History.html">History.html</a> provides a chronological
+        <li><a href="doc/LicenseInfo.html">LicenseInfo.html</a> provides licenses 
+          for use of all software included with this system.</li>
+        <li><a href="doc/History.html">History.html</a> provides a chronological 
           record of the releases of this system.</li>
-      </ul>
-</tr>
-
-<tr><td align="center" valign="top" width="93">./src
-    <td valign="top" width="626">Contains the source files.
-
-<tr><td align="center" valign="top" width="93">./build
-    <td valign="top" width="626">Contains various products of the build process, including:
+      </ul></tr>
+  <tr> 
+    <td align="center" valign="top" width="93">./src 
+    <td valign="top" width="626">Contains the source files. 
+  <tr> 
+    <td align="center" valign="top" width="93">./build 
+    <td valign="top" width="626">Contains various products of the build process, 
+      including: 
       <ul>
-        <li>junit/: Contains
-          output from the JUnit tests, created by 'ant -f junit.build.xml'</li>
-        <li>war/: Contains the web application built, created by 'ant -f
-          tomcat.build.xml'</li>
-        <li>dist/ Contains any distributions built
-          during development.</li>
+        <li>junit/: Contains output from the JUnit tests, created by 'ant -f junit.build.xml'</li>
+        <li>jar/: Contains the application built, created by 'ant -f jar.build.xml'</li>
+        <li>dist/ Contains any distributions built during development.</li>
       </ul>
-      <p>These links won't work until their corresponding ant target has been
-      executed.
-
+      <p>These links won't work until their corresponding ant target has been 
+        executed. 
+  <tr>
+    <td align="center" valign="top">./data
+    <td valign="top">Contains test images.
 </table>
 
-<h2>B. Basic Installation</h2>
-
-<p>These instructions assume that you have unzipped the zip file containing this
-system to create a directory containing the system components. A note to Unix
-users: due to a bug in java.util.zip, the directory permissions are munged if you unzip in Unix, and you won't be able to cd into
-interior directories.&nbsp; To fix this, invoke the following from the parent
-directory of this system: chmod -R a+x &lt;system directory&gt;.&nbsp;</p>
+<p>&nbsp;</p>
+<h2>B. Basic Installation</h2> </h2>
+<p>These instructions assume that you have unzipped the zip file containing this 
+  system to create a directory containing the system components.</p>
+<p> A note to Unix users: due to a bug in java.util.zip, the directory permissions 
+  are munged if you unzip in Unix, and you won't be able to cd into interior directories.&nbsp;<br>
+  To fix this, invoke the following from the parent directory of this system: 
+  chmod -R a+x &lt;system directory&gt;.&nbsp;</p>
 
 <h3>B1: Install Java 1.5</h3>
 
@@ -97,207 +100,25 @@ directory of this system: chmod -R a+x &lt;system directory&gt;.&nbsp;</p>
       (for example, <a href="file:///c:/apache-ant-1.7.0Beta1">c:\apache-ant-1.7.0Beta1</a>)</li>
     <li>Add ANT_HOME/bin to your PATH variable.&nbsp;</li>
   </ul>
-  <h3>B3: Install HttpUnit 1.6.2</h3>
-  <ul>
-    <li>Download and unzip httpunit-1.6.2.zip from <a href="http://httpunit.sourceforge.net/">http://httpunit.sourceforge.net/</a>.&nbsp;&nbsp;</li>
-    <li>Set the HTTPUNIT_HOME environment variable to point to your HttpUnit
-      installation (for example, <a href="file:///c:/java/httpunit-1.6.2">c:\java\httpunit-1.6.2</a>)</li>
+  
+<h3>B3: Configure Eclipse for building the system</h3>
+<ul>
+    
+  <li>Under Window | Preferences | Java | Build Path | Classpath Variables, create 
+    three new Classpath Variables called COMMONMATH_HOME, The values of these 
+    classpath variables should be the same as their corresponding environment 
+    variables.&nbsp;</li>
+    <li>After you have done this, you should be able to import this project into
+      your Eclipse workspace without error.&nbsp;</li>
   </ul>
-  <h3>B4: Install Emma 2.0.5312</h3>
-  <ul>
-    <li>Download and unzip emma-2.0.5312.zip from <a href="http://emma.sourceforge.net/">http://emma.sourceforge.net/</a>.&nbsp;&nbsp;</li>
-    <li>Set the EMMA_HOME environment variable to point to your Emma
-      installation (for example, <a href="file:///c:/java/emma-2.0.5312">c:\java\emma-2.0.5312</a>).&nbsp;</li>
-  </ul>
 
-<h2>C. Invocation</h2>
+<h2>C. Invocation</h2>  
+<h3>C1: Basic compilation</h3>
+<p>To perform a basic compilation, invoke &quot;ant&quot;</p>
+<h3>C2: System build</h3>
+<p>To build the executable jar, invoke &quot;ant jar&quot;</p>
+<h3>C3: System run</h3>
+<p>To run the demo yiu need, to go into build/jar folder and invoke the demo by &quot;java -jar jar.build.xml&quot;</p>
 
-  <h3>C1: Basic compilation</h3>
-  <p>To perform a basic compilation, invoke &quot;ant&quot;:</p>
-  <pre>C:\svn-csdl\StackMVCgui&gt;ant
-Buildfile: build.xml
-
-compile:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\classes
-    [javac] Compiling 6 source files to C:\svn-csdl\StackMVCgui\build\classes
-
-BUILD SUCCESSFUL
-Total time: 2 seconds
-Sending build result to Hackystat server...</pre>
-  <h3>C2: Basic jar file creation</h3>
-  <p>To create a jar file that can bring up the gui using 'java -jar build/stackmvcgui.jar',
-  invoke&nbsp; 'ant -f jar.build.xml':</p>
-  <pre>C:\svn-csdl\StackMVCgui&gt;ant -f jar.build.xml
-Buildfile: jar.build.xml
-
-clean:
-   [delete] Deleting directory C:\svn-csdl\StackMVCgui\build
-
-compile:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\classes
-    [javac] Compiling 6 source files to C:\svn-csdl\StackMVCgui\build\classes
-
-jar:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\jar
-     [copy] Copying 13 files to C:\svn-csdl\StackMVCgui\build\jar
-    [unjar] Expanding: C:\svn-csdl\StackMVCgui\lib\jar\swingmiglayout15.jar into C:\svn-csdl\StackMVCgui\build\jar
-    [unjar] Expanding: C:\svn-csdl\StackMVCgui\lib\jar\stack.jar into C:\svn-csdl\StackMVCgui\build\jar
-      [jar] Building jar: C:\svn-csdl\StackMVCgui\build\stackmvcgui.jar
-
-BUILD SUCCESSFUL
-Total time: 3 seconds
-Sending build result to Hackystat server... Done!</pre>
-  <h3>C4: Running JUnit Tests</h3>
-  <p>To run the JUnit tests over the system, invoke 'ant -f junit.build.xml'.
-  The results should look as follows:</p>
-  <pre>C:\svn-csdl\StackMVCgui&gt;ant -f junit.build.xml
-Buildfile: junit.build.xml
-
-compile:
-
-junit.tool:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\junit
-    [junit] Running edu.hawaii.stackmvcgui.main.TestGuiInterface
-    [junit] Tests run: 3, Failures: 0, Errors: 0, Time elapsed: 1.272 sec
-    [junit] Running edu.hawaii.stackmvcgui.model.TestStackModel
-    [junit] Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 0.09 sec
-
-junit.report:
-[junitreport] Processing C:\svn-csdl\StackMVCgui\build\junit\TESTS-TestSuites.xml to C:\DOCUME~1\johnson\LOCALS~1\Temp\null1049601219
-[junitreport] Loading stylesheet jar:file:/C:/apache-ant-1.7.0Beta1/lib/ant-junit.jar!/org/apache/tools/ant/taskdefs/optional/junit/xsl/junit-frames.xsl
-[junitreport] Transform time: 841ms
-[junitreport] Deleting: C:\DOCUME~1\johnson\LOCALS~1\Temp\null1049601219
-
-junit.sensor:
-[hacky-junit] Hackystat data on 4 JUnit tests sent to http://hackystat.ics.hawaii.edu/ (0 secs.)
-
-junit:
-
-BUILD SUCCESSFUL
-Total time: 6 seconds
-Sending build result to Hackystat server...</pre>
-  <h3>C5: Running Emma to get coverage data.</h3>
-  <p>To determine the coverage associated with the unit tests, invoke 'ant -f
-  emma.build.xml':</p>
-  <pre>C:\svn-csdl\StackMVCgui&gt;ant -f emma.build.xml
-Buildfile: emma.build.xml
-
-clean:
-   [delete] Deleting directory C:\svn-csdl\StackMVCgui\build
-
-compile:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\classes
-    [javac] Compiling 6 source files to C:\svn-csdl\StackMVCgui\build\classes
-
-emma.instrument:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\emma
-    [instr] processing instrumentation path ...
-    [instr] instrumentation path processed in 170 ms
-    [instr] [10 class(es) instrumented, 0 resource(s) copied]
-    [instr] metadata merged into [C:\svn-csdl\StackMVCgui\build\emma\metadata.emma] {in 50 ms}
-
-emma.junit:
-    [mkdir] Created dir: C:\svn-csdl\StackMVCgui\build\junit
-    [junit] Running edu.hawaii.stackmvcgui.main.TestGuiInterface
-    [junit] Tests run: 3, Failures: 0, Errors: 0, Time elapsed: 0.731 sec
-    [junit] Output:
-    [junit] EMMA: collecting runtime coverage data ...
-
-    [junit] Running edu.hawaii.stackmvcgui.model.TestStackModel
-    [junit] Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 0.16 sec
-    [junit] Output:
-    [junit] EMMA: collecting runtime coverage data ...
-
-
-emma.tool:
-
-emma.report:
-   [report] processing input files ...
-   [report] 2 file(s) read and merged in 0 ms
-   [report] writing [xml] report to [C:\svn-csdl\StackMVCgui\build\emma\coverage.xml] ...
-   [report] writing [html] report to [C:\svn-csdl\StackMVCgui\build\emma\coverage.html] ...
-
-emma.sensor:
-[hacky-emma] Hackystat data on 40 coverage entries sent to http://hackystat.ics.hawaii.edu/ (1 secs.)
-
-emma:
-
-BUILD SUCCESSFUL
-Total time: 16 seconds
-Sending build result to Hackystat server...
-</pre>
-  <h2>D. User documentation</h2>
-  <p>User-level documentation for this package is not available. The stack
-  system is intended for developer use only.</p>
-
-
-<h2>E. Developer documentation</h2>
-
-<p>This distribution includes Eclipse project definition files. In addition, it
-includes the following developer build files and targets. For the external tools
-(Checkstyle, PMD, FindBugs, JUnit, SCLC), you must download them from their home
-pages, unzip them, and then set an environment variable (CHECKSTYLE_HOME,
-PMD_HOME, etc.) to point to this directory.&nbsp;</p>
-
-<table border="1" width="100%">
-  <tr>
-    <td width="22%" valign="top">checkstyle.build.xml
-      <p>Requires: checkstyle 4.2</td>
-    <td width="78%" valign="top">Runs <a href="http://checkstyle.sourceforge.net/">Checkstyle</a>
-      on the system, using rules in lib/checkstyle/checkstyle.modules.xml
-      <p>Invocation: ant -f checkstyle.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">junit.build.xml
-      <p>Requires: JUnit 4.1</td>
-    <td width="78%" valign="top">Runs <a href="http://www.junit.org/">JUnit</a>
-      on the system, using Test case code in src/**/Test*.java.
-      <p>Invocation: ant -f junit.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">javadoc.build.xml
-      <p>&nbsp;</td>
-    <td width="78%" valign="top">Runs JavaDoc on the system.&nbsp;
-      <p>Invocation: ant -f javadoc.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">findbugs.build.xml
-      <p>Requires: FindBugs 1.0.0</td>
-    <td width="78%" valign="top">Runs <a href="http://findbugs.sourceforge.net/">FindBugs</a>
-      on the system, using rules in lib/findbugs/findbugs.filter.xml
-      <p>Invocation: ant -f findbugs.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">pmd.build.xml
-      <p>Requires: PMD 3.7</td>
-    <td width="78%" valign="top">Runs <a href="http://pmd.sourceforge.net/">PMD</a>
-      on the system, using rules in lib/pmd/pmd.rulesets.xml
-      <p>Invocation: ant -f pmd.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">sclc.build.xml
-      <p>Requires: SCLC 2.4.525</td>
-    <td width="78%" valign="top">Runs <a href="http://csdl.ics.hawaii.edu/Tools/SCLC/">SCLC</a>
-      on the system.
-      <p>Invocation: ant -f sclc.build.xml</td>
-  </tr>
-  <tr>
-    <td width="22%" valign="top">dist.build.xml</td>
-    <td width="78%" valign="top">Creates a distribution zip file for this
-      system.
-      <p>Invocation: ant -f dist.build.xml</td>
-  </tr>
-</table>
-  <h2>F. Contact information</h2>
-  <p>If you would like to know more about this software, or would like to be
-  informed of future releases:</p>
-  <ul>
-    <li><b>Home page</b>:&nbsp; <a href="http://csdl.ics.hawaii.edu/~johnson/413f06">http://csdl.ics.hawaii.edu/~johnson/413f06</a></li>
-    <li><b>Developer contact:</b> Philip Johnson <a href="mailto:(johnson@hawaii.edu">(johnson@hawaii.edu</a>)</li>
-    <li><b>Configuration management repository:</b> not available.</li>
-    <li><b>Developer and user mailing lists:</b> not available.</li>
-  </ul>
-<pre>&nbsp;</pre>
-
-</body>
+		</body>
 </html>

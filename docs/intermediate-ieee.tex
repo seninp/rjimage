@@ -379,25 +379,23 @@ P\left(F,\omega\left|\right.\Theta,\beta,p,L\right)=P\left(F\left|\right.\omega,
 The pixel classes (segmentation itself) represented as a multivariate Gaussian distribution and the underlied MRF (Markov Random Field) process follows a Gibbs distribution defined over a first order neighborhood system. 
 
 Previous equation could be factored out as:
-\begin{equation}
+\begin{eqnarray}
+\begin{group}
 \left(F\left|\right.\omega,\Theta,\beta,p,L\right) = 
-P\left(F\left|\right.\omega,\Theta\right)=
-$$
-\par
-$
+P\left(F\left|\right.\omega,\Theta\right)=\nonumber \\
 \begin{flushleft}
 \prod_{s \in S}
 \left(\frac{1}{\sqrt{\left(2\pi\right)^{3}\left|\sum_{\omega_{s}}\right|}}
 \exp\left(
 -\frac{1}{2}
-\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right) \right.\times
-\end{flushleft}
- $$
-\par
-$
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right) \right.
+\end{flushleft}\times\\
+\begin{flushright}
 \left.\left.\sum_{\omega_{s}}^{-1}
 \left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T \right)\right)
-\end{equation}
+\end{flushright}
+\end{group}
+\end{eqnarray}
 
 
 Proceeding further we have:

@@ -10,6 +10,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.File;
@@ -54,6 +55,7 @@ public class ImageFactory extends Observable implements Runnable {
    * Holds current image raster USHORT type
    */
   private short[][] raster;
+
   /**
    * Holds Gaussians for the image segmentation, i.e. class label is a key and IClass object holds
    * all parameters for the distribution itself.
@@ -81,6 +83,14 @@ public class ImageFactory extends Observable implements Runnable {
   private Integer maxClasses = 10;
 
   private String method;
+
+  private short[][] splitRaster;
+  private Integer[][] splitLabels;
+  private TreeMap<Integer, IClass> splitClasses;
+
+  private short[][] mergeRaster;
+  private Integer[][] mergeLabels;
+  private TreeMap<Integer, IClass> mergeClasses;
 
   /**
    * Resets labeling with initial values. See Kato99Bayesian explanation.
@@ -334,6 +344,24 @@ public class ImageFactory extends Observable implements Runnable {
   }
 
   /**
+   * Computes singleton energy for the pixel in splitMove.
+   * 
+   * @param i pixel row.
+   * @param j pixel column.
+   * @param label pixel label.
+   * @return singleton energy.
+   */
+
+  private Double splitSingleton(Integer i, Integer j, Integer label) {
+    Double m = this.splitClasses.get(label).getMean();
+    Double s = this.splitClasses.get(label).getStDev();
+    // return log(sqrt(2.0*3.141592653589793*variance[label])) +
+    // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
+    return Math.log(Math.sqrt(2.0 * Math.PI * s))
+        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
+  }
+
+  /**
    * Computes doubleton energy for the pixel.
    * 
    * @param i pixel row.
@@ -379,6 +407,51 @@ public class ImageFactory extends Observable implements Runnable {
   }
 
   /**
+   * Computes doubleton energy for the pixel in Split Move.
+   * 
+   * @param i pixel row.
+   * @param j pixel column.
+   * @param label pixel label.
+   * @return doubleton energy.
+   */
+  private Double splitDoubleton(int i, int j, int label) {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+
+    double energy = 0.0;
+
+    if (i != height - 1) // south
+    {
+      if (label == this.splitLabels[i + 1][j])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (j != width - 1) // east
+    {
+      if (label == this.splitLabels[i][j + 1])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (i != 0) // nord
+    {
+      if (label == this.splitLabels[i - 1][j])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (j != 0) // west
+    {
+      if (label == this.splitLabels[i][j - 1])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    return energy;
+  }
+
+  /**
    * Returns computed local energy for the pixel.
    * 
    * @param i row of the image.
@@ -388,6 +461,18 @@ public class ImageFactory extends Observable implements Runnable {
    */
   private Double getLocalEnergy(Integer i, Integer j, Integer label) {
     return singleton(i, j, label) + doubleton(i, j, label);
+  }
+
+  /**
+   * Returns computed local energy for the pixel.
+   * 
+   * @param i row of the image.
+   * @param j column of the image.
+   * @param label label specified.
+   * @return energy.
+   */
+  private Double getSplitLocalEnergy(Integer i, Integer j, Integer label) {
+    return splitSingleton(i, j, label) + splitDoubleton(i, j, label);
   }
 
   /**
@@ -529,7 +614,6 @@ public class ImageFactory extends Observable implements Runnable {
             Double rnd = randGen.nextUniform(0D, 1D);
             r = (this.labels[i][j] + ((Double) (rnd * (no_regions - 1))).intValue() + 1)
                 % no_regions;
-            // if (!mmd) // Metropolis: kszi is a uniform random number
             rnd = randGen.nextUniform(0D, 1D);
             kszi = Math.log(rnd);
             /*
@@ -583,7 +667,7 @@ public class ImageFactory extends Observable implements Runnable {
 
       for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
-          for (Integer cls : classes.keySet()) {
+          for (Integer cls : this.classes.keySet()) {
             if (getLocalEnergy(i, j, labels[i][j]) > getLocalEnergy(i, j, cls)) {
               labels[i][j] = cls;
             }
@@ -654,51 +738,67 @@ public class ImageFactory extends Observable implements Runnable {
       // ######## MOVE 1.
       // having current segmentation in the classes Map go with the first move - Gaussian
       // segmentation
-      this.resegmentImage();
+      rjmcmc2_1SampleOmega();
 
       // ######## MOVE 2.
       // we choose class to split by uniform distribution.
       Double rnd = randGen.nextUniform(0D, 1D);
-      Integer class2Split = ((Double) (rnd / (1 / ((Integer) this.classes.size()).doubleValue())))
-          .intValue();
+      Double PSplitSelect = 1D / ((Integer) this.classes.size()).doubleValue();
+      Integer class2Split = ((Long) Math.round((Double) (rnd / PSplitSelect))).intValue();
+
       // we choose classes by minimal Minkovsky distance
-      Integer minClass1 = 0;
-      Integer minClass2 = 0;
-      getMergeCandidate(minClass1, minClass2);
+      Integer class2Merge1 = 0;
+      Integer class2Merge2 = 0;
+      Double PMergeSelect = getMergeCandidate(class2Merge1, class2Merge2);
 
       // probabilities of merge and split
       Double pSplit = 0D;
       Double pMerge = 0D;
-      IClass underSplitting = null;
-      ArrayList<IClass> splitClasses = null;
 
       if (this.classes.size() == this.minClasses) {
-        underSplitting = this.classes.get(class2Split);
-        splitClasses = doSplit(underSplitting);
         pSplit = 1D;
         pMerge = 0D;
       }
       else if (this.classes.size() == this.maxClasses) {
-        IClass mergeClass = doMerge(this.classes.get(minClass1), this.classes.get(minClass2));
         pSplit = 0D;
         pMerge = 1D;
       }
       else {// here we need to decide which way to choose
-        underSplitting = this.classes.get(class2Split);
-        splitClasses = doSplit(underSplitting);
-        IClass mergeClass = doMerge(this.classes.get(minClass1), this.classes.get(minClass2));
         pSplit = 0.5;
         pMerge = 0.5;
       }
-
       //
       // now we have set up probabilities and having split and merge classes ready - let's do the
       // job, first calculate acceptance probability.
       //
-      if (pSplit > 0) {
-        Double P_realloc = ProbabilityOfReallocation(class2Split, splitClasses);
-        // Double P_splitted = ProbabilityOfSplitted();
-        // Double P_current = ProbabilityOfCurrent();
+      // Generate U random parameters
+
+      // generating sets of random variables and getting parameters for the + class
+      // BETA RANDOM FUNCTION NEED TO BE IMPLEMENTED
+      Double u1 = 0D, u1_beta = 0D, u2 = 0D, u2_beta = 0D, u3 = 0D, u3_beta = 0D;
+      try {
+        u1 = randGen.nextUniform(0D, 1D);
+        u1_beta = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+
+        u2 = randGen.nextUniform(0D, 1D);
+        u2_beta = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+
+        u3 = randGen.nextUniform(0D, 1D);
+        u3_beta = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
+      }
+      catch (MathException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+
+      if ((pSplit > 0) && (pMerge > 0)) {
+
+        IClass mergeClass = rjmcmcSelect2Merge(this.classes.get(class2Merge1), this.classes
+            .get(class2Merge2));
+        ArrayList<IClass> splitClasses = rjmcmcSelect2Split(class2Split, u1_beta, u2_beta, u3_beta);
+
+        rjmcmcDoSplit(class2Split, splitClasses, randGen);
+        rjmcmcDoMerge(mergeClass, class2Merge1, class2Merge2);
 
       }
       temp = temp * tempRate; // decrease temperature
@@ -714,7 +814,144 @@ public class ImageFactory extends Observable implements Runnable {
     }// while
   }
 
-  private void getMergeCandidate(Integer minClass1, Integer minClass2) {
+  private void rjmcmcDoMerge(IClass mergeClass, Integer class2Merge1, Integer class2Merge2) {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    if (null == this.mergeClasses) {
+      this.mergeClasses = new TreeMap<Integer, IClass>();
+    }
+    else {
+      this.mergeClasses.clear();
+    }
+    for (Integer cls : this.classes.keySet()) {
+      if (class2Merge1.equals(cls)) {
+        this.mergeClasses.remove(class2Merge1);
+        this.mergeClasses.put(class2Merge1, mergeClass);
+      }
+      else if (class2Merge2.equals(cls)) {
+        this.mergeClasses.remove(class2Merge2);
+      }
+      else {
+        this.mergeClasses.put(cls, this.classes.get(cls));
+      }
+    }
+
+    // assign labels
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        if ((class2Merge1.equals(this.labels[i][j])) || (class2Merge2.equals(this.labels[i][j]))) {
+          this.mergeLabels[i][j] = class2Merge1;
+        }
+      }
+    }
+
+  }
+
+  private void rjmcmcDoSplit(Integer class2Split, ArrayList<IClass> splitClasses,
+      RandomDataImpl randGen) {
+    // private short[][] splitRaster;
+    // private Integer[][] splitLabels;
+    // private TreeMap<Integer, IClass> splitClasses;
+    if (null == this.splitClasses) {
+      this.splitClasses = new TreeMap<Integer, IClass>();
+    }
+    else {
+      this.splitClasses.clear();
+    }
+    Integer label1 = class2Split;
+    Integer label2 = -1;
+    for (Integer cls : this.classes.keySet()) {
+      if (label1.equals(cls)) {
+        this.splitClasses.put(label1, splitClasses.get(0));
+      }
+      else {
+        this.splitClasses.put(cls, this.classes.get(cls));
+      }
+    }
+    label2 = this.splitClasses.size();
+    this.splitClasses.put(label2, splitClasses.get(1));
+
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+
+    // assign labels randomly
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        if (class2Split.equals(this.labels[i][j])) {
+          if (randGen.nextUniform(0D, 1D) > 0.5) {
+            this.splitLabels[i][j] = label1;
+          }
+          else {
+            this.splitLabels[i][j] = label2;
+          }
+        }
+        else {
+          this.splitLabels[i][j] = this.labels[i][j];
+        }
+      }
+    }
+
+    // run ICM algorithm to fix the stuff
+    boolean inLoop = true;
+    Integer counter = 0;
+    while (inLoop) {
+      for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+          for (Integer cls : this.splitClasses.keySet()) {
+            if (cls.equals(label1) || cls.equals(label2))
+              if (getSplitLocalEnergy(i, j, this.splitLabels[i][j]) > getSplitLocalEnergy(i, j, cls)) {
+                this.splitLabels[i][j] = cls;
+              }
+          }
+        }
+      }
+      counter++;
+      if (counter > 5) {
+        inLoop = false;
+      }
+    }
+
+  }
+
+  /**
+   * Splits provided class by two using provided parameters.
+   * 
+   * @param class2Split class to split.
+   * @param u1_beta random parameter u1.
+   * @param u2_beta random parameter u2.
+   * @param u3_beta random parameter u3.
+   * @return resulting splitted classes.
+   */
+  private ArrayList<IClass> rjmcmcSelect2Split(Integer class2Split, Double u1_beta, Double u2_beta,
+      Double u3_beta) {
+
+    Double m_old = this.classes.get(class2Split).getMean();
+    Double l_old = this.classes.get(class2Split).getStDev();
+    // generating sets of random variables and getting parameters for the + class
+    Double p_lambda1 = l_old * u1_beta;
+    Double p_lambda2 = l_old * (1 - u1_beta);
+
+    Double m_lambda1 = m_old + u2_beta * Math.sqrt(l_old * ((1 - u1_beta) / u1_beta));
+    Double m_lambda2 = m_old - u2_beta * Math.sqrt(l_old * (u1_beta / (1 - u1_beta)));
+
+    Double l_lambda1 = u3_beta * (1 - u2_beta * u2_beta) * l_old * (1 / u1_beta);
+    Double l_lambda2 = (1 - u3_beta) * (1 - u2_beta * u2_beta) * l_old * (1 / u1_beta);
+
+    ArrayList<IClass> res = new ArrayList<IClass>();
+    // public IClass(Double mean, Double stdev, Double weight) {
+    res.add(new IClass(m_lambda1, l_lambda1, p_lambda1));
+    res.add(new IClass(m_lambda2, l_lambda2, p_lambda2));
+
+    return res;
+
+  }
+
+  private void rjmcmc2_1SampleOmega() {
+    resegmentImage();
+    gibbsSampler();
+  }
+
+  private Double getMergeCandidate(Integer minClass1, Integer minClass2) {
     // we are choosing merging classes probability using calculations according Kato article
     // (5.17)
     Double distanceSum = 0D;
@@ -728,6 +965,7 @@ public class ImageFactory extends Observable implements Runnable {
     // go find the minimal pair.
     Double tmpDist = mahalanobisDistance(minClass1, minClass2);
     Double minDist = tmpDist;
+    Double prob = 0D;
     for (Integer cls : this.classes.keySet()) {
       for (int c = 0; c < this.classes.size(); c++) {
         if (!cls.equals(c)) {
@@ -736,11 +974,13 @@ public class ImageFactory extends Observable implements Runnable {
             minDist = tmpDist;
             minClass1 = cls;
             minClass2 = c;
+            prob = tmpDist / distanceSum;
           }
         }
       }
     }// minimal pair search finished.
 
+    return prob;
   }
 
   private Double ProbabilityOfReallocation(Integer underSplitting, ArrayList<IClass> splitClasses) {
@@ -856,53 +1096,12 @@ public class ImageFactory extends Observable implements Runnable {
     return pRealloc1 * pRealloc2;
   }
 
-  private IClass doMerge(IClass class1, IClass class2) {
+  private IClass rjmcmcSelect2Merge(IClass class1, IClass class2) {
     Double newMean = (class1.getMean() + class2.getMean()) / 2;
     Double newSigma = (class1.getStDev() + class2.getStDev());
     Double newP = class1.getWeight() + class2.getWeight();
     // public IClass(Double mean, Double stdev, Double weight) {
     return new IClass(newMean, newSigma, newP);
-  }
-
-  /**
-   * Does splitting IClass by two
-   * 
-   * @param underSplitting class to split by two.
-   * @return classes that result splitting.
-   */
-  private ArrayList<IClass> doSplit(IClass underSplitting) {
-
-    try {
-      RandomDataImpl randGen = new RandomDataImpl();
-
-      Double m_old = underSplitting.getMean();
-      Double l_old = underSplitting.getStDev();
-      // generating sets of random variables and getting parameters for the + class
-      // BETA RANDOM FUNCTION NEED TO BE IMPLEMENTED
-      Double u1 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
-      Double p_lambda1 = l_old * u1;
-      Double p_lambda2 = l_old * (1 - u1);
-
-      Double u2 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
-      Double m_lambda1 = m_old + u2 * Math.sqrt(l_old * ((1 - u1) / u1));
-      Double m_lambda2 = m_old - u2 * Math.sqrt(l_old * (u1 / (1 - u1)));
-
-      Double u3 = Beta.regularizedBeta(randGen.nextUniform(0D, 1D), 1.1, 1.1);
-      Double l_lambda1 = u3 * (1 - u2 * u2) * l_old * (1 / u1);
-      Double l_lambda2 = (1 - u3) * (1 - u2 * u2) * l_old * (1 / u1);
-
-      ArrayList<IClass> res = new ArrayList<IClass>();
-      // public IClass(Double mean, Double stdev, Double weight) {
-      res.add(new IClass(m_lambda1, l_lambda1, p_lambda1));
-      res.add(new IClass(m_lambda2, l_lambda2, p_lambda2));
-      return res;
-    }
-    catch (MathException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    return null;
-
   }
 
   public void setMethod(String method) {
@@ -955,6 +1154,15 @@ public class ImageFactory extends Observable implements Runnable {
    */
   public Double getCoolingRate() {
     return this.coolingRate;
+  }
+
+  public void setClasses(TreeMap<Integer, IClass> classes) {
+    this.classes = classes;
+    resetSegmentation();
+  }
+
+  public RenderedImage getCurrentBufferedImage() {
+    return this.image;
   }
 
 }

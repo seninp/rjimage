@@ -3,6 +3,7 @@ package edu.hawaii.senin.rjimage.view;
 import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -16,6 +17,7 @@ import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
 
 import net.miginfocom.swing.MigLayout;
+import edu.hawaii.senin.rjimage.model.IClass;
 import edu.hawaii.senin.rjimage.model.ImageFactory;
 import edu.hawaii.senin.rjimage.model.ImageFactoryStatus;
 
@@ -46,10 +48,27 @@ public class View implements Observer {
   private JTextField temperatureTextField = new JTextField("6.0");
   private JLabel coolingScheduleLabel = new JLabel("Temperature schedule");
   private JTextField coolingScheduleTextField = new JTextField("0.98");
+  private JLabel gaussian1Mean = new JLabel("Class1 mean");
+  private JTextField gaussian1MeanField = new JTextField("0.2");
+  private JLabel gaussian1Stdev = new JLabel("Class1 stdev");
+  private JTextField gaussian1StdevField = new JTextField("0.2");
+  private JLabel gaussian2Mean = new JLabel("Class2 mean");
+  private JTextField gaussian2MeanField = new JTextField("0.4");
+  private JLabel gaussian2Stdev = new JLabel("Class2 stdev");
+  private JTextField gaussian2StdevField = new JTextField("0.2");
+  private JLabel gaussian3Mean = new JLabel("Class3 mean");
+  private JTextField gaussian3MeanField = new JTextField("0.6");
+  private JLabel gaussian3Stdev = new JLabel("Class3 stdev");
+  private JTextField gaussian3StdevField = new JTextField("0.2");
+  private JLabel gaussian4Mean = new JLabel("Class4 mean");
+  private JTextField gaussian4MeanField = new JTextField("0.8");
+  private JLabel gaussian4Stdev = new JLabel("Class4 stdev");
+  private JTextField gaussian4StdevField = new JTextField("0.2");
 
   // setup buttons panel
   private JPanel buttonsPane = new JPanel();
   private JButton loadImageButton = new JButton("Load...");
+  private JButton saveImageButton = new JButton("Save PNG...");
   private JButton startICMButton = new JButton("ICM");
   private JButton startGibbsButton = new JButton("Gibbs");
   private JButton startMetropolisButton = new JButton("Metropolis");
@@ -70,14 +89,14 @@ public class View implements Observer {
     // does nothing
     assert true;
   }
-  
+
   /**
    * Needed by Java language standards to run this stuff.
-   *
+   * 
    */
-  public void run(){
+  public void run() {
     // does nothing
-    assert true;    
+    assert true;
   }
 
   /**
@@ -91,6 +110,10 @@ public class View implements Observer {
 
   public void addLoadListener(ActionListener listener) {
     loadImageButton.addActionListener(listener);
+  }
+  
+  public void addSaveListener(ActionListener listener) {
+    saveImageButton.addActionListener(listener);
   }
 
   public void addICMListener(ActionListener listener) {
@@ -123,7 +146,7 @@ public class View implements Observer {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     // set the layout for the application
-    MigLayout layout = new MigLayout("", "[center]50[center]", "[]10[]10[]");
+    MigLayout layout = new MigLayout("", "[center, fill, grow]10[center, fill, grow]", "[fill, grow][][][fill, grow]");
     this.frame.getContentPane().setLayout(layout);
 
     // original Image display panel
@@ -138,8 +161,8 @@ public class View implements Observer {
 
     this.frame.getContentPane().add(parametersPane, "grow, span 2, wrap");
     parametersPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
-    MigLayout staticLayout = new MigLayout("fillx", "[left]5[grow,fill]unrel[left]5[grow,fill]",
-        "[]10[]10[]");
+    MigLayout staticLayout = new MigLayout("fillx", "[left][grow,fill]unrel[left][grow,fill]",
+        "[][]20[][][][]");
     this.parametersPane.setLayout(staticLayout);
     this.parametersPane.add(new JLabel("Temperature settings:"), "span 2,wrap");
     this.parametersPane.add(temperatureLabel, "");
@@ -147,15 +170,36 @@ public class View implements Observer {
     this.parametersPane.add(coolingScheduleLabel, "");
     this.parametersPane.add(coolingScheduleTextField, "wrap");
 
+    this.parametersPane.add(gaussian1Mean, "");
+    this.parametersPane.add(gaussian1MeanField, "");
+    this.parametersPane.add(gaussian1Stdev, "");
+    this.parametersPane.add(gaussian1StdevField, "wrap");
+
+    this.parametersPane.add(gaussian2Mean, "");
+    this.parametersPane.add(gaussian2MeanField, "");
+    this.parametersPane.add(gaussian2Stdev, "");
+    this.parametersPane.add(gaussian2StdevField, "wrap");
+
+    this.parametersPane.add(gaussian3Mean, "");
+    this.parametersPane.add(gaussian3MeanField, "");
+    this.parametersPane.add(gaussian3Stdev, "");
+    this.parametersPane.add(gaussian3StdevField, "wrap");
+
+    this.parametersPane.add(gaussian4Mean, "");
+    this.parametersPane.add(gaussian4MeanField, "");
+    this.parametersPane.add(gaussian4Stdev, "");
+    this.parametersPane.add(gaussian4StdevField, "wrap");
+
     // all buttons pane
-    this.frame.getContentPane().add(buttonsPane, "width :690:, height :60:, span 2, wrap");
-    // MigLayout buttonsPaneLayout = new MigLayout("", "[center]50[center]", "[]10[]10[]");
-    // logPane.setLayout(new MigLayout());
+    this.frame.getContentPane().add(buttonsPane, "grow, span 2, wrap");
     buttonsPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
 
     // add load image button
     buttonsPane.add(loadImageButton);
 
+    // add save image button
+    buttonsPane.add(saveImageButton);
+    
     // add load image button
     buttonsPane.add(startICMButton);
 
@@ -175,7 +219,7 @@ public class View implements Observer {
     this.logTextArea.setEditable(false);
     this.logTextArea.append("running Reversible Jump image segmentation Demo v. 0.000001\n");
     this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
-    this.frame.getContentPane().add(logTextPane, "height 200:200:200, grow, span 2");
+    this.frame.getContentPane().add(logTextPane, "height :200:, grow, span 2");
     // logPane.setLayout(new MigLayout());
     // logPane.setViewportView(logTextPane,);
     logTextPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
@@ -243,7 +287,6 @@ public class View implements Observer {
     }
 
   }
-  
 
   /**
    * Reports initial temperature for simulated annealing.
@@ -269,10 +312,73 @@ public class View implements Observer {
    * @param str string to add.
    */
   public void addToLog(String str) {
-    if(str.charAt(str.length()-1) != '\n'){
+    if (str.charAt(str.length() - 1) != '\n') {
       str = str.concat("\n");
     }
     this.logTextArea.append(str);
     this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+  }
+
+  public TreeMap<Integer, IClass> getClasses() {
+    TreeMap<Integer, IClass> res = new TreeMap<Integer, IClass>();
+    Double m1 = Double.valueOf(this.gaussian1MeanField.getText());
+    Double s1 = Double.valueOf(this.gaussian1StdevField.getText());
+    // Double w1 = Double.valueOf(this.gaussian1WeightField.getText());
+    Double m2 = Double.valueOf(this.gaussian2MeanField.getText());
+    Double s2 = Double.valueOf(this.gaussian2StdevField.getText());
+    Double m3 = Double.valueOf(this.gaussian3MeanField.getText());
+    Double s3 = Double.valueOf(this.gaussian3StdevField.getText());
+    Double m4 = Double.valueOf(this.gaussian4MeanField.getText());
+    Double s4 = Double.valueOf(this.gaussian4StdevField.getText());
+    boolean valid = false;
+    Integer classNum = 0;
+    
+    if (m1.equals(0D) && s1.equals(0D)) {
+      this.logTextArea.append("Class 1 data is invalid, will go over");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    else {
+      res.put(classNum, new IClass(m1, s1, 0D));
+      classNum += 1;
+      valid = true;
+    }
+
+    if (m2.equals(0D) && s2.equals(0D)) {
+      this.logTextArea.append("Class 2 data is invalid, will go over");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    else {
+      res.put(classNum, new IClass(m2, s2, 0D));
+      classNum += 1;
+      valid = true;
+    }
+
+    if (m3.equals(0D) && s3.equals(0D)) {
+      this.logTextArea.append("Class 3 data is invalid, will go over");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    else {
+      res.put(classNum, new IClass(m3, s3, 0D));
+      classNum += 1;
+      valid = true;
+    }
+
+    if (m4.equals(0D) && s4.equals(0D)) {
+      this.logTextArea.append("Class 4 data is invalid, will go over");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    else {
+      res.put(classNum, new IClass(m4, s4, 0D));
+      classNum+= 1;
+      valid = true;
+    }
+    
+    if(valid){
+      return res;
+    }else{
+      this.logTextArea.append("Horrible death of sampler: All classes are invalid!!!!");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    return null;
   }
 }
