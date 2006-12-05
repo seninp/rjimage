@@ -1,0 +1,103 @@
+<project name="build" default="compile">
+  <description>The main Ant build file for Reversible jump mcmc system.</description>
+
+  <!-- Always make environment variables available with the "env." prefix. -->
+  <property environment="env" />
+
+  <!-- Make sure we're running a Java 5 or better. -->
+  <condition property="java.5.available">
+    <or>
+      <contains string="${java.version}" substring="1.5" />
+      <contains string="${java.version}" substring="1.6" />
+    </or>
+  </condition>
+  <fail message="This package requires Java 5 or 6." unless="java.5.available" />
+
+  <!-- Make sure we're running Ant 1.7 . -->
+  <condition property="ant.1.7.available">
+    <contains string="${ant.version}" substring="1.7" />
+  </condition>
+  <fail message="This package requires Ant 1.7." unless="ant.1.7.available" />
+
+  <!-- Make sure that JUnit is installed . -->
+  <available file="${env.JUNIT_HOME}" type="dir" property="junit.available" />
+  <fail message="This package requires JUnit to be installed and JUNIT_HOME defined"
+    unless="junit.available" />
+
+  <!-- Make sure that Hackystat Ant Build sensor is installed. -->
+  <available classname="org.hackystat.sensor.ant.BuildSensorInstallationAntTask"
+    property="ant.sensor.available" />
+  <fail unless="ant.sensor.available"
+    message="This package requires the Hackystat Ant Sensor to be installed." />
+  <taskdef name="hacky-build" classname="org.hackystat.sensor.ant.BuildSensorInstallationAntTask" />
+  <property name="hackystat.verbose.mode" value="false" />
+  <hacky-build verbose="${hackystat.verbose.mode}" />
+
+  <!-- Basic properties for this system. -->
+  <property name="system.name" value="rjimage-demo" />
+  <property name="majorVersionNumber" value="1" />
+  <property name="minorVersionNumber" value="0" />
+  <tstamp>
+    <format property="TSTAMP" pattern="HH:mm:ss" />
+    <format property="DAYSTAMP" pattern="Mdd" />
+  </tstamp>
+  <property name="system.main.class" value="edu.hawaii.senin.rjimage.main.Main" />
+  <property name="user.name" value="PavelSenin" />
+  <property name="version" value="${majorVersionNumber}.${minorVersionNumber}.${DAYSTAMP}" />
+  <property name="buildtime" value="${TODAY} ${TSTAMP}" />
+
+  <!-- Basic directory structure. -->
+  <property name="src.dir" location="${basedir}/src" />
+  <property name="lib.dir" location="${basedir}/lib" />
+  <property name="build.dir" location="${basedir}/build" />
+  <property name="build.lib" location="${build.dir}/lib" />
+  <property name="build.config" location="${build.dir}/config" />
+
+  <!-- The compile classpath is useful for the compile, javadoc, junit, emma, and other targets. -->
+  <path id="compile.classpath">
+    <fileset file="${lib.dir}/commons/commons-math-1.1.jar" />
+    <fileset file="${lib.dir}/jar/swingmiglayout15.jar" />
+    <fileset file="${lib.dir}/jaruispec4j-1.1.jar" />
+    <fileset file="${env.JUNIT_HOME}/junit*.jar" />
+  </path>
+
+  <target name="compile" description="Compiles the code.">
+    <mkdir dir="${build.dir}/classes" />
+    <mkdir dir="${build.dir}/classes/images" />
+    <copy todir="${build.dir}/classes/images">
+      <fileset dir="${basedir}/images" />
+    </copy>
+    <javac srcdir="${src.dir}" destdir="${build.dir}/classes" source="1.5" debug="on"
+      includeAntRuntime="no">
+      <classpath refid="compile.classpath" />
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile"
+    description="Create the jar file for this system in the build dir.">
+    <mkdir dir="${build.dir}/jar" />
+    <unjar src="${lib.dir}/commons/commons-math-1.1.jar" dest="${build.dir}/classes" />
+    <unjar src="${lib.dir}/jar/swingmiglayout15.jar" dest="${build.dir}/classes" />
+    <jar jarfile="${build.dir}/jar/${system.name}.jar" basedir="${build.dir}/classes"
+      includes="org/**,net/**,edu/**,images/**">
+      <manifest>
+        <attribute name="Built-By" value="${user.name}" />
+        <attribute name="Main-Class" value="${system.main.class}" />
+        <attribute name="Specification-Title" value="${system.name}" />
+        <attribute name="Specification-Vendor" value="${system.vendor}" />
+        <attribute name="Specification-Version" value="${version}" />
+      </manifest>
+    </jar>
+  </target>
+
+
+  <target name="clean" description="Delete build/ directory.">
+    <delete dir="${build.dir}" />
+  </target>
+
+  <target name="convertLineEndings"
+    description="Makes line endings compatible with host platform.">
+    <fixcrlf srcdir="${basedir}" includes="*.build.xml" />
+  </target>
+
+</project>
