@@ -170,30 +170,31 @@ public class ImageFactory extends Observable implements Runnable {
     Integer height = raster.getHeight();
     Integer width = raster.getWidth();
     // refresh all needed variables
-    this.labels = new Integer[height][width];
-    this.raster = new short[height][width];
-    this.originalRaster = new short[height][width];
+    this.labels = new Integer[width][height];
+    this.raster = new short[width][height];
+    this.originalRaster = new short[width][height];
 
-    byte[][] rasterIntermediate = new byte[height][width];
-    short[][] rasterPlain = new short[height][width];
+    byte[][] rasterIntermediate = new byte[width][height];
+    short[][] rasterPlain = new short[width][height];
 
-    Double[][] probHolder = new Double[height][width];
+    Double[][] probHolder = new Double[width][height];
 
     // getting real raster
     for (int j = 0; j < width; j++) {
       raster.getDataElements(j, 0, 1, height, rasterIntermediate[j]);
     }
+    
     // making it "short"
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
+    for (int i = 0; i < width; i++) {
+      for (int j = 0; j < height; j++) {
         rasterPlain[i][j] = rasterIntermediate[i][j];
         rasterPlain[i][j] &= 0xff;// shift from "-128...+127" to "0...255"
         this.originalRaster[i][j] = rasterPlain[i][j];
       }
     }
     //
-    for (int i = 0; i < raster.getHeight(); i++) {
-      for (int j = 0; j < raster.getWidth(); j++) {
+    for (int i = 0; i < width; i++) {
+      for (int j = 0; j < height; j++) {
 
         for (Integer c : this.classes.keySet()) {
           IClass cls = classes.get(c);
@@ -212,8 +213,8 @@ public class ImageFactory extends Observable implements Runnable {
       }// i
     }// j
 
-    for (int i = 0; i < height; i++) {
-      for (int j = 0; j < width; j++) {
+    for (int i = 0; i < width; i++) {
+      for (int j = 0; j < height; j++) {
         this.raster[i][j] = ((Double) Math
             .floor(this.classes.get(this.labels[i][j]).getMean() * 255)).shortValue();
       }
@@ -362,6 +363,24 @@ public class ImageFactory extends Observable implements Runnable {
   }
 
   /**
+   * Computes singleton energy for the pixel in mergeMove.
+   * 
+   * @param i pixel row.
+   * @param j pixel column.
+   * @param label pixel label.
+   * @return singleton energy.
+   */
+
+  private Double mergeSingleton(Integer i, Integer j, Integer label) {
+    Double m = this.mergeClasses.get(label).getMean();
+    Double s = this.mergeClasses.get(label).getStDev();
+    // return log(sqrt(2.0*3.141592653589793*variance[label])) +
+    // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
+    return Math.log(Math.sqrt(2.0 * Math.PI * s))
+        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
+  }
+
+  /**
    * Computes doubleton energy for the pixel.
    * 
    * @param i pixel row.
@@ -452,6 +471,51 @@ public class ImageFactory extends Observable implements Runnable {
   }
 
   /**
+   * Computes doubleton energy for the pixel in Merge Move.
+   * 
+   * @param i pixel row.
+   * @param j pixel column.
+   * @param label pixel label.
+   * @return doubleton energy.
+   */
+  private Double mergeDoubleton(int i, int j, int label) {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+
+    double energy = 0.0;
+
+    if (i != height - 1) // south
+    {
+      if (label == this.mergeLabels[i + 1][j])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (j != width - 1) // east
+    {
+      if (label == this.mergeLabels[i][j + 1])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (i != 0) // nord
+    {
+      if (label == this.mergeLabels[i - 1][j])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    if (j != 0) // west
+    {
+      if (label == this.mergeLabels[i][j - 1])
+        energy -= beta;
+      else
+        energy += beta;
+    }
+    return energy;
+  }
+
+  /**
    * Returns computed local energy for the pixel.
    * 
    * @param i row of the image.
@@ -500,10 +564,15 @@ public class ImageFactory extends Observable implements Runnable {
    * labeling.
    * 
    */
-  public void gibbsSampler() {
+  public void gibbsSampler(boolean print) {
 
     Long startTime = System.currentTimeMillis();
 
+    if (print) {
+      setChanged();
+      notifyObservers("Starting Gibbs samplerGibbs sampler with " + this.classes.size()
+          + " classes.");
+    }
     resegmentImage();
     setChanged();
     notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
@@ -558,25 +627,29 @@ public class ImageFactory extends Observable implements Runnable {
       temp = temp * tempRate; // decrease temperature
 
       iterationsCounter++;
-      setChanged();
-      notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
-          + currentEnergy + "E delta: " + deltaEnergy + "\n");
+      if (print) {
+        setChanged();
+        notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
+            + currentEnergy + "E delta: " + deltaEnergy + "\n");
+      }
       this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
     }
     Long endTime = System.currentTimeMillis();
-    setChanged();
-    notifyObservers("Gibbs sampler finished at iteration " + iterationsCounter + " with energy: "
-        + currentEnergy + ".\n");
+    if (print) {
+      setChanged();
+      notifyObservers("Gibbs sampler finished at iteration " + iterationsCounter + " with energy: "
+          + currentEnergy + ".\n");
+      Long totalTime = endTime - startTime;
+      Integer hours = Math.round(totalTime / 3600000);
+      Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
+      Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
 
-    Long totalTime = endTime - startTime;
-    Integer hours = Math.round(totalTime / 3600000);
-    Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
-    Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
-    setChanged();
-    notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
-        + " sec.\n");
+      setChanged();
+      notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
+          + " sec.\n");
+    }
 
   }
 
@@ -705,7 +778,7 @@ public class ImageFactory extends Observable implements Runnable {
       metropolisSampler();
     }
     else if (this.method.equalsIgnoreCase("gibbs")) {
-      gibbsSampler();
+      gibbsSampler(true);
     }
     else if (this.method.equalsIgnoreCase("rjmcmc")) {
       rjmcmcSampler();
@@ -800,18 +873,64 @@ public class ImageFactory extends Observable implements Runnable {
         rjmcmcDoSplit(class2Split, splitClasses, randGen);
         rjmcmcDoMerge(mergeClass, class2Merge1, class2Merge2);
 
+        Double mergeEnergy = getGlobalMergeEnergy();
+        Double splitEnergy = getGlobalSplitEnergy();
+
+        if (mergeEnergy < splitEnergy) {
+          keepMerge();
+        }
+        else {
+          keepSplit();
+        }
+
       }
+      currentEnergy = getGlobalEnergy();
+      deltaEnergy = Math.abs(oldEnergy - currentEnergy);
+      oldEnergy = currentEnergy;
+
       temp = temp * tempRate; // decrease temperature
 
       iterationsCounter++;
       setChanged();
-      notifyObservers("Iteration: " + iterationsCounter + " T: " + temp + " energy: "
-          + currentEnergy + "E delta: " + deltaEnergy + "\n");
+      notifyObservers("Itr: " + iterationsCounter + ", classes: " + this.classes.size() + ", T: "
+          + temp + " energy: " + currentEnergy + "E delta: " + deltaEnergy + "\n");
       this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
     }// while
+  }
+
+  private void keepMerge() {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    this.classes.clear();
+    for (Integer cls : this.mergeClasses.keySet()) {
+      this.classes.put(cls, this.mergeClasses.get(cls));
+    }
+    // assign labels
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        this.labels[i][j] = this.mergeLabels[i][j];
+      }
+    }
+    resegmentImage();
+  }
+
+  private void keepSplit() {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    this.classes.clear();
+    for (Integer cls : this.splitClasses.keySet()) {
+      this.classes.put(cls, this.splitClasses.get(cls));
+    }
+    // assign labels
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        this.labels[i][j] = this.splitLabels[i][j];
+      }
+    }
+    resegmentImage();
   }
 
   private void rjmcmcDoMerge(IClass mergeClass, Integer class2Merge1, Integer class2Merge2) {
@@ -948,7 +1067,7 @@ public class ImageFactory extends Observable implements Runnable {
 
   private void rjmcmc2_1SampleOmega() {
     resegmentImage();
-    gibbsSampler();
+    gibbsSampler(false);
   }
 
   private Double getMergeCandidate(Integer minClass1, Integer minClass2) {
@@ -1158,11 +1277,52 @@ public class ImageFactory extends Observable implements Runnable {
 
   public void setClasses(TreeMap<Integer, IClass> classes) {
     this.classes = classes;
-    resetSegmentation();
+    resegmentImage();
+    this.image = generateSegmentedImage();
+    setChanged();
+    notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
   }
 
   public RenderedImage getCurrentBufferedImage() {
     return this.image;
+  }
+
+  /**
+   * Calculates global energy of the Splitted image .
+   * 
+   * @return global energy.
+   */
+  private Double getGlobalSplitEnergy() {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    Double singletons = 0.0;
+    Double doubletons = 0.0;
+    for (int i = 0; i < height; ++i)
+      for (int j = 0; j < width; ++j) {
+        Integer cls = this.splitLabels[i][j];
+        singletons += splitSingleton(i, j, cls);
+        doubletons += splitDoubleton(i, j, cls);
+      }
+    return singletons + doubletons / 2;
+  }
+
+  /**
+   * Calculates global energy of the Merged image .
+   * 
+   * @return global energy.
+   */
+  private Double getGlobalMergeEnergy() {
+    Integer height = this.raster.length;
+    Integer width = this.raster[0].length;
+    Double singletons = 0.0;
+    Double doubletons = 0.0;
+    for (int i = 0; i < height; ++i)
+      for (int j = 0; j < width; ++j) {
+        Integer cls = this.mergeLabels[i][j];
+        singletons += mergeSingleton(i, j, cls);
+        doubletons += mergeDoubleton(i, j, cls);
+      }
+    return singletons + doubletons / 2;
   }
 
 }

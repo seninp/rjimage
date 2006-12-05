@@ -3,7 +3,6 @@ package edu.hawaii.senin.rjimage.controller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -101,6 +100,7 @@ public class Controller {
         assert true;
       }
       else {
+        imageFactory.setClasses(classes);
         view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
             + ", cooling rate: " + imageFactory.getCoolingRate());
         new Thread(imageFactory).start();
@@ -136,6 +136,7 @@ public class Controller {
         assert true;
       }
       else {
+        imageFactory.setClasses(classes);
         view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
             + ", cooling rate: " + imageFactory.getCoolingRate());
         new Thread(imageFactory).start();
@@ -145,6 +146,7 @@ public class Controller {
 
   private class RunRJListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
+      imageFactory.setMethod("rjmcmc");
       imageFactory.setStartTemperature(view.getStartTemperature());
       imageFactory.setCoolingSchedule(view.getCoolingSchedule());
       TreeMap<Integer, IClass> classes = view.getClasses();
@@ -152,8 +154,8 @@ public class Controller {
         assert true;
       }
       else {
-        imageFactory.setMethod("rjmcmc");
-        view.addToLog("will start with temperature: " + imageFactory.getStartTemperature()
+        imageFactory.setClasses(classes);
+        view.addToLog("will start RJMCMC with temperature: " + imageFactory.getStartTemperature()
             + ", cooling rate: " + imageFactory.getCoolingRate());
         new Thread(imageFactory).start();
       }

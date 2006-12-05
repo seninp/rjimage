@@ -333,8 +333,8 @@ public class View implements Observer {
     boolean valid = false;
     Integer classNum = 0;
     
-    if (m1.equals(0D) && s1.equals(0D)) {
-      this.logTextArea.append("Class 1 data is invalid, will go over");
+    if ((m1.equals(0D)) || (s1.equals(0D))) {
+      this.logTextArea.append("Class 1 data is invalid, will go over\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     else {
@@ -343,8 +343,8 @@ public class View implements Observer {
       valid = true;
     }
 
-    if (m2.equals(0D) && s2.equals(0D)) {
-      this.logTextArea.append("Class 2 data is invalid, will go over");
+    if ((m2.equals(0D)) || (s2.equals(0D))) {
+      this.logTextArea.append("Class 2 data is invalid, will go over\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     else {
@@ -353,8 +353,8 @@ public class View implements Observer {
       valid = true;
     }
 
-    if (m3.equals(0D) && s3.equals(0D)) {
-      this.logTextArea.append("Class 3 data is invalid, will go over");
+    if ((m3.equals(0D)) || (s3.equals(0D))) {
+      this.logTextArea.append("Class 3 data is invalid, will go over\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     else {
@@ -363,8 +363,8 @@ public class View implements Observer {
       valid = true;
     }
 
-    if (m4.equals(0D) && s4.equals(0D)) {
-      this.logTextArea.append("Class 4 data is invalid, will go over");
+    if ((m4.equals(0D)) || (s4.equals(0D))) {
+      this.logTextArea.append("Class 4 data is invalid, will go over\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     else {
@@ -376,7 +376,7 @@ public class View implements Observer {
     if(valid){
       return res;
     }else{
-      this.logTextArea.append("Horrible death of sampler: All classes are invalid!!!!");
+      this.logTextArea.append("Horrible death of sampler: All classes are invalid!!!!\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     return null;
