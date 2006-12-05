@@ -1,0 +1,28 @@
+library(rgdal)
+library(pixmap)
+par(mfrow=c(2,2))
+image1 <- GDAL.open("../data/grey_bleedhearts34.png") 
+image1.description <- getDescription(image1)
+image1.driver <- getDriverLongName(getDriver(image1))
+image1.dim <- dim(image1)
+image1.metadata <- getMetadata(image1)
+image1.raster <- getRasterData(image1, band = 1, offset = c(0, 0),dim(image1), dim(image1), interleave = c(0, 0), as.is = FALSE)
+image1.raster <- image1.raster / 255
+image1.raster.flat <- t(getRasterData(image1, band=1)) / 255
+displayDataset(image1, band=1, , image.dim = c(334, 500), reset = FALSE)
+title("original image", sub="500 x 334")
+plot(density(image1.raster), main = "Pixel's distribution")
+GDAL.close(image1)
+
+logo <- system.file("pictures/Rlogo.jpg", package="rgdal")[1]
+x <- GDAL.open(logo)
+opar <- par(no.readonly=TRUE)
+par(mfrow=c(2,2))
+displayDataset(x, band=1, reset.par=FALSE)
+displayDataset(x, band=2, reset.par=FALSE)
+displayDataset(x, band=3, reset.par=TRUE)
+par(opar)
+dx <- RGB2PCT(x, band=1:3)
+displayDataset(dx)
+GDAL.close(x)
+GDAL.close(dx)
