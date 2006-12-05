@@ -171,7 +171,12 @@ public class ImageFactory extends Observable implements Runnable {
     Integer width = raster.getWidth();
     // refresh all needed variables
     this.labels = new Integer[width][height];
+    this.splitLabels = new Integer[width][height];
+    this.mergeLabels = new Integer[width][height];
+
     this.raster = new short[width][height];
+    this.splitRaster = new short[width][height];
+    this.mergeRaster = new short[width][height];
     this.originalRaster = new short[width][height];
 
     byte[][] rasterIntermediate = new byte[width][height];
@@ -183,7 +188,7 @@ public class ImageFactory extends Observable implements Runnable {
     for (int j = 0; j < width; j++) {
       raster.getDataElements(j, 0, 1, height, rasterIntermediate[j]);
     }
-    
+
     // making it "short"
     for (int i = 0; i < width; i++) {
       for (int j = 0; j < height; j++) {
@@ -582,7 +587,7 @@ public class ImageFactory extends Observable implements Runnable {
     // make instance of random number generator
     RandomDataImpl randGen = new RandomDataImpl();
     // storage
-    Double[] classE = new Double[this.classes.size()];
+    Double[] classE = new Double[this.classes.size() + 1];
 
     Double deltaEnergy = 10000D;
     Double deltaEnergyMin = 0.01;
@@ -603,7 +608,7 @@ public class ImageFactory extends Observable implements Runnable {
         for (int j = 0; j < width; ++j) {
 
           sumEnergy = 0D;
-          for (Integer cls : classes.keySet()) {
+          for (Integer cls : this.classes.keySet()) {
             classE[cls] = Math.exp(-getLocalEnergy(i, j, cls) / temp);
             sumEnergy = sumEnergy + classE[cls];
           }
@@ -787,6 +792,7 @@ public class ImageFactory extends Observable implements Runnable {
 
   private void rjmcmcSampler() {
 
+    resegmentImage();
     // collect useful variables
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
@@ -821,7 +827,7 @@ public class ImageFactory extends Observable implements Runnable {
 
       // we choose classes by minimal Minkovsky distance
       Integer class2Merge1 = 0;
-      Integer class2Merge2 = 0;
+      Integer class2Merge2 = 1;
       Double PMergeSelect = getMergeCandidate(class2Merge1, class2Merge2);
 
       // probabilities of merge and split
@@ -877,10 +883,14 @@ public class ImageFactory extends Observable implements Runnable {
         Double splitEnergy = getGlobalSplitEnergy();
 
         if (mergeEnergy < splitEnergy) {
-          keepMerge();
+          rjmcmcKeepMerge();
+          setChanged();
+          notifyObservers("Keeping MERGE\n");
         }
         else {
-          keepSplit();
+          rjmcmcKeepSplit();
+          setChanged();
+          notifyObservers("Keeping SPLIT\n");
         }
 
       }
@@ -901,7 +911,7 @@ public class ImageFactory extends Observable implements Runnable {
     }// while
   }
 
-  private void keepMerge() {
+  private void rjmcmcKeepMerge() {
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
     this.classes.clear();
@@ -917,7 +927,7 @@ public class ImageFactory extends Observable implements Runnable {
     resegmentImage();
   }
 
-  private void keepSplit() {
+  private void rjmcmcKeepSplit() {
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
     this.classes.clear();
@@ -942,24 +952,35 @@ public class ImageFactory extends Observable implements Runnable {
     else {
       this.mergeClasses.clear();
     }
+    Integer classNum = 0;
+    Integer newMergeClassLabel = 0;
+    TreeMap<Integer, Integer> labelsReMapping = new TreeMap<Integer, Integer>();
     for (Integer cls : this.classes.keySet()) {
       if (class2Merge1.equals(cls)) {
         this.mergeClasses.remove(class2Merge1);
-        this.mergeClasses.put(class2Merge1, mergeClass);
+        this.mergeClasses.put(classNum, mergeClass);
+        newMergeClassLabel = classNum;
+        classNum++;
       }
       else if (class2Merge2.equals(cls)) {
-        this.mergeClasses.remove(class2Merge2);
+        assert true;
       }
       else {
-        this.mergeClasses.put(cls, this.classes.get(cls));
+        this.mergeClasses.put(classNum, this.classes.get(cls));
+        labelsReMapping.put(cls, classNum);
+        classNum++;
       }
     }
 
     // assign labels
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        if ((class2Merge1.equals(this.labels[i][j])) || (class2Merge2.equals(this.labels[i][j]))) {
-          this.mergeLabels[i][j] = class2Merge1;
+        Integer cLabel = this.labels[i][j];
+        if ((class2Merge1.equals(cLabel)) || (class2Merge2.equals(cLabel))) {
+          this.mergeLabels[i][j] = newMergeClassLabel;
+        }
+        else {
+          this.mergeLabels[i][j] = labelsReMapping.get(cLabel);
         }
       }
     }

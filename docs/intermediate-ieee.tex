@@ -1,4 +1,3 @@
-
 %% bare_jrnl.tex
 %% V1.2
 %% 2002/11/18
@@ -49,7 +48,7 @@
 
 % some very useful LaTeX packages include:
 
-%\usepackage{cite}      % Written by Donald Arseneau
+\usepackage{cite}      % Written by Donald Arseneau
                         % V1.6 and later of IEEEtran pre-defines the format
                         % of the cite.sty package \cite{} output to follow
                         % that of IEEE. Loading the cite package will
@@ -66,7 +65,7 @@
                         % systems. The latest version can be obtained at:
                         % http://www.ctan.org/tex-archive/macros/latex/contrib/supported/cite/
 
-%\usepackage{graphicx}  % Written by David Carlisle and Sebastian Rahtz
+\usepackage{graphicx}  % Written by David Carlisle and Sebastian Rahtz
                         % Required if you want graphics, photos, etc.
                         % graphicx.sty is already installed on most LaTeX
                         % systems. The latest version and documentation can
@@ -77,11 +76,11 @@
                         % which can be found as esplatex.ps and epslatex.pdf
                         % at: http://www.ctan.org/tex-archive/info/
 % NOTE: for dual use with latex and pdflatex, instead load graphicx like:
-%\ifx\pdfoutput\undefined
-%\usepackage{graphicx}
-%\else
-%\usepackage[pdftex]{graphicx}
-%\fi
+\ifx\pdfoutput\undefined
+\usepackage{graphicx}
+\else
+\usepackage[pdftex]{graphicx}
+\fi
 
 % However, be warned that pdflatex will require graphics to be in PDF
 % (not EPS) format and will preclude the use of PostScript based LaTeX
@@ -102,7 +101,7 @@
 % compiler will have to be run twice to clear some warnings.
 
 
-%\usepackage{psfrag}    % Written by Craig Barratt, Michael C. Grant,
+\usepackage{psfrag}    % Written by Craig Barratt, Michael C. Grant,
                         % and David Carlisle
                         % This package allows you to substitute LaTeX
                         % commands for text in imported EPS graphic files.
@@ -123,7 +122,7 @@
                         % and documentation can be obtained at:
                         % http://www.ctan.org/tex-archive/macros/latex/contrib/supported/psfrag/
 
-%\usepackage{subfigure} % Written by Steven Douglas Cochran
+\usepackage{subfigure} % Written by Steven Douglas Cochran
                         % This package makes it easy to put subfigures
                         % in your figures. i.e., "figure 1a and 1b"
                         % Docs are in "Using Imported Graphics in LaTeX2e"
@@ -133,14 +132,14 @@
                         % and documentation can be obtained at:
                         % http://www.ctan.org/tex-archive/macros/latex/contrib/supported/subfigure/
 
-%\usepackage{url}       % Written by Donald Arseneau
+\usepackage{url}       % Written by Donald Arseneau
                         % Provides better support for handling and breaking
                         % URLs. url.sty is already installed on most LaTeX
                         % systems. The latest version can be obtained at:
                         % http://www.ctan.org/tex-archive/macros/latex/contrib/other/misc/
                         % Read the url.sty source comments for usage information.
 
-%\usepackage{stfloats}  % Written by Sigitas Tolusis
+\usepackage{stfloats}  % Written by Sigitas Tolusis
                         % Gives LaTeX2e the ability to do double column
                         % floats at the bottom of the page as well as the top.
                         % (e.g., "\begin{figure*}[!b]" is not normally
@@ -162,13 +161,13 @@
                         % midfloat.sty package (by the same author) as IEEE
                         % does not format its papers in such ways.
 
-%\usepackage{amsmath}   % From the American Mathematical Society
+\usepackage{amsmath}   % From the American Mathematical Society
                         % A popular package that provides many helpful commands
                         % for dealing with mathematics. Note that the AMSmath
                         % package sets \interdisplaylinepenalty to 10000 thus
                         % preventing page breaks from occurring within multiline
                         % equations. Use:
-%\interdisplaylinepenalty=2500
+\interdisplaylinepenalty=2500
                         % after loading amsmath to restore such page breaks
                         % as IEEEtran.cls normally does. amsmath.sty is already
                         % installed on most LaTeX systems. The latest version
@@ -179,7 +178,7 @@
 
 % Other popular packages for formatting tables and equations include:
 
-%\usepackage{array}
+\usepackage{array}
 % Frank Mittelbach's and David Carlisle's array.sty which improves the
 % LaTeX2e array and tabular environments to provide better appearances and
 % additional user controls. array.sty is already installed on most systems.
@@ -232,18 +231,18 @@
 % load natbib.sty under IEEEtran.cls, the following code must be placed
 % before natbib.sty can be loaded:
 %
-% \makeatletter
-% \let\NAT@parse\undefined
-% \makeatother
+\makeatletter
+\let\NAT@parse\undefined
+\makeatother
 %
 % Hyperref should be loaded differently depending on whether pdflatex
 % or traditional latex is being used:
 %
-%\ifx\pdfoutput\undefined
-%\usepackage[hypertex]{hyperref}
-%\else
-%\usepackage[pdftex,hypertexnames=false]{hyperref}
-%\fi
+\ifx\pdfoutput\undefined
+\usepackage[hypertex]{hyperref}
+\else
+\usepackage[pdftex,hypertexnames=false]{hyperref}
+\fi
 %
 % Pdflatex produces superior hyperref results and is the recommended
 % compiler for such use.
@@ -272,8 +271,7 @@
 % use \thanks{} to gain access to the first footnote area
 % a separate \thanks must be used for each paragraph as LaTeX2e's \thanks
 % was not built to handle multiple paragraphs
-\author{Pavel V. Senin,
-			  ~\IEEEmembership{UH,~Student}% <-this % stops a space
+\author{Pavel V. Senin,~\IEEEmembership{UH,~Student}% <-this % stops a space
 \thanks{The work was not supported by the IEEE.}% <-this % stops a space
 \thanks{Last revised at \date{\today}.}% <-this % stops a space
 \thanks{Thanks to my kids for constant disturbing.}}
@@ -316,7 +314,7 @@
 
 
 \begin{abstract}
-While the ultimate goal of this project was to build a Reversible Jump MCMC sampler for image segmentation the others methods such as ICM, Gibbs sampler, Metropolis sampler and Simulated Annealing arised as a necessary milestones in order to meet the goal. So far all milestones are implemented while RJMCMC sampler itself is not done - the acceptance probability of the split or joining of classes is not finished. Being crucial in RJMCMC method, this part prevents from successful project closure. Nevertheless author believe that it could and would be done in short time after 5th of December of 2006. If not, the way and idea are well expressed in cited articles, this report and provided to the public source code at http://code.google.com/p/rjimage/. This is SVN repository URL that contains this documents along with software implementation.
+While the ultimate goal of this project was to build a Reversible Jump MCMC sampler for image segmentation the others methods such as ICM, Gibbs sampler, Metropolis sampler and Simulated Annealing arised as a necessary milestones in order to meet the goal. So far all milestones are implemented while RJMCMC sampler itself is not done - the acceptance probability of the split or joining of classes is not finished. Being crucial in RJMCMC method, this part prevents from successful project closure. Nevertheless author believe that it could and would be done in short time after 5th of December of 2006. If not, the way and idea are well expressed in cited articles along with this report and provided to the public by source code repository at http://code.google.com/p/rjimage/. Repositoty contains this documents along with software implementation.
 \end{abstract}
 
 \begin{keywords}
@@ -330,7 +328,7 @@ RJMCMC, image segmentation, Gibbs sampler, ICM, Metropolis sampler.
 %
 % For peerreview papers, inserts a page break and creates the second title.
 % Will be ignored for other modes.
-\IEEEpeerreviewmaketitle
+%\IEEEpeerreviewmaketitle
 
 
 \section{Model design}
@@ -369,70 +367,59 @@ The joint distribution of above variables $L,p,\beta,\omega,\Theta,F$ given by f
 P\left(L,p,\beta,\omega,\Theta,F\right) = P\left(\omega,F\left|\Theta,\beta,p,L\right.\right)P\left(\Theta,\beta,p,L\right)
 \end{equation}
 Impose the independence of labeling $\Theta$, inter-pixel composition $\beta$, component weights $p$, and labels set power $L$ as parameters that given randomly in every processed image. Therefore their joint probability reduces to 
-\begin{equation}
+\begin{eqnarray}
 P\left(\Theta,\beta,p,L\right) = P\left(\Theta\right)P\left(\beta\right)P\left(p\right)P\left(L\right)
-\end{equation}
+\end{eqnarray}
 The posterior distribution of $\left(F, \omega \right)$ may be expressed as:
-\begin{equation}
-P\left(F,\omega\left|\right.\Theta,\beta,p,L\right)=P\left(F\left|\right.\omega,\Theta,\beta,p,L\right)P\left(\omega\left|\right.\Theta,\beta,p,L\right)
-\end{equation}
+\begin{eqnarray}
+P\left(F,\omega\left|\right.\Theta,\beta,p,L\right)=\nonumber\\
+P\left(F\left|\right.\omega,\Theta,\beta,p,L\right)P\left(\omega\left|\right.\Theta,\beta,p,L\right)
+\end{eqnarray}
 The pixel classes (segmentation itself) represented as a multivariate Gaussian distribution and the underlied MRF (Markov Random Field) process follows a Gibbs distribution defined over a first order neighborhood system. 
 
 Previous equation could be factored out as:
 \begin{eqnarray}
-\begin{group}
 \left(F\left|\right.\omega,\Theta,\beta,p,L\right) = 
 P\left(F\left|\right.\omega,\Theta\right)=\nonumber \\
-\begin{flushleft}
 \prod_{s \in S}
 \left(\frac{1}{\sqrt{\left(2\pi\right)^{3}\left|\sum_{\omega_{s}}\right|}}
 \exp\left(
 -\frac{1}{2}
 \left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right) \right.
-\end{flushleft}\times\\
-\begin{flushright}
+\times\nonumber\\
 \left.\left.\sum_{\omega_{s}}^{-1}
 \left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T \right)\right)
-\end{flushright}
-\end{group}
 \end{eqnarray}
-
-
 Proceeding further we have:
-\begin{equation}
+\begin{eqnarray}
 P\left(\omega\left|\right.\Theta,\beta,p,L\right) = 
-P\left(\omega\left|\right.\beta,p,L\right) = $$
-\par
-$\frac {1} {Z\left(\beta,p,L\right)}
+P\left(\omega\left|\right.\beta,p,L\right) = \nonumber \\
+\frac {1} {Z\left(\beta,p,L\right)}
 \exp\left(
 -U\left(\omega\left|\right.\beta p,L\right)
 \right)
-\end{equation}
-
+\end{eqnarray}
 where $U\left(\omega\left|\right.\beta, p, L \right)$ is energy function:
-
-\begin{equation}
+\begin{eqnarray}
 U\left(\omega\left|\right.\beta, p,L\right) = 
 \sum_{s\in S}-\log\left(p_{\omega_{s}}\right) +
 \beta\sum_{\left\{s,r\right\}\in C}
 \delta\left(\omega_{s},\omega_{r}\right)
-\end{equation}
+\end{eqnarray}
 $\delta\left(\omega_{s},\omega_{r}\right) = 1$ if $\omega_{s}$ and $\omega_{r}$ are different and -1 otherwise. 
 $Z\left(\beta,p,L\right) = \sum_{\omega\in \Omega}\exp\left( -U\left(\omega\left|\right.\beta,p,L\right)\right)$ is normalization constant or partition function. $C$ denotes the set of cliques and $\left\{s,r\right\}$ is doubleton containing the neighboring pixel sites $r$ and $s$.
 
 Note that the whole posterior distribution could be derived from Gibbs distribution where the Gaussian distribution taken in account in the energy of the external field:
-\begin{equation}
+\begin{eqnarray}
 U\left(F\left|\right.\omega,\Theta\right) = 
--\log\left(P\left(F\left|\right.\omega,\Theta\right)\right) = 
-
+-\log\left(P\left(F\left|\right.\omega,\Theta\right)\right) = \nonumber \\
 \sum\limits_{s\in S}\left(
 \ln\left(\sqrt{\left(2\pi\right)^{3}}\right) +
 \frac{1}{2}
 \left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)
 \sum_{\omega_{s}}^{-1}
-\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T
-\right)
-\end{equation}
+\left(\vec{f}_{s}-\vec{\mu}_{\omega_{s}}\right)^T\right)
+\end{eqnarray}
 
 Now, we are using facts that $P\left(F\right)$ is constant for any particular image and Equation (1), Equation (2), Equation (4) and Equation (7) we are able to approximate the posterior density $P\left(L,p,\beta,\omega,\Theta\left|\right.F\right) = P\left(L,p,\beta,\omega,\Theta,F\right)/P\left(F\right)$:
 \begin{equation}
@@ -662,7 +649,7 @@ P\left(L\right)
 P\left(\vec{\mu_{\lambda}}\right)P\left(\Sigma_{\lambda}\right)P\left(p_{\lambda}\right)
 \end{equation}
 
-Since the dimensionality of the parameter space is altered, the reversible jump technique, is needed for sampling from the posterior distribution. I will not go into the deepness of mathematical formulas in this report due to space and IEEE format constraints, all of those could be found within original article [1]. 
+Since the dimensionality of the parameter space is altered, the reversible jump technique is needed for sampling from the posterior distribution. I will not go into the deepness of mathematical formulas in this report due to space and IEEE format constraints, all of those could be found within original article [1]. 
 
 But I would try to give the idea of RJMCMC using plain English language. The rule that should be obeyed in the reversible jump is reversibility, i.e. if the system could move from one dimensionality to another it must have the same probability to move back. Underlying rule of equality of splitting/joining probabilities allow the system to do exhaustive search over all possible combinations (segmentations in this case). Therefore probabilities of split and join are calculated at first, than acceptance probability of split and joining compared and final decision made.
 
@@ -702,6 +689,7 @@ $\left|\frac{
 \partial\left(\Theta_{\lambda},p_{\lambda},u\right)
 }\right|
 \end{equation}
+
 $P_{realloc}$ denotes the probability of reallocating pixels labeled by $\lambda$ into regions labeled by $\lambda_{1}$ and $\lambda_{2}$. The last factor is Jacobian of the transformation. The acceptance probability now could be expressed as:
 \begin{equation}
 A_{merge}\left(L,\widehat{p},\widehat{\beta},\widehat{\omega},\widehat{\Theta};L-1,p^{-},\widehat{\beta},\widehat{\omega}^{-},\widehat{\Theta}^{-}\right) = min\left(1,\frac{1}{A}\right)
@@ -873,7 +861,7 @@ In this section I will describe in short algorithm that summarizes all the above
 
 
 \section{Conclusion}
-The conclusion goes here.
+As the result of above the methods of ICM, Simulated Annealing, Gibbs sampler based image segmentation and Metropolis-Hasting sampler based image segmentation are coded and tested in Java. The aim of understanding and impelmenting the RJ MCMC method is achieved and only lack of time prevents project from complete finishing. As could be seen in experimental results section ICM works with noised and damaged images restoring them back. Gibbs sampler is less effective than Metropolis-Hasting sampler from time performance point of view, but it is better from final result point of view because it serach over all available combinations of parameters.
 
 % if have a single appendix:
 %\appendix[Proof of the Zonklar Equations]
@@ -894,9 +882,9 @@ The conclusion goes here.
 % (such as "A-A"). Capitalized Roman numerals are the default.
 %\useRomanappendicesfalse
 %
-\appendices
+\appendix
 \section{Demo software usage}
-The coded software is accessible with source codes at http://code.google.com/p/rjimage/. For the compilation and correct work it needs at least Java 1.5 and Ant 1.7 installed at system. So far it correctly works with grayscale (byte for pixel) images and demonstrates the ICM algorithm, Gibbs sampler and Metropolis-Hasting sampler. The RJMCMC methos as I have mentioned is almost done, I am stuck figuring out those $u$'s used in acceptance probability, once it would be over the joy of running RJMCMC algorithm would be provided to community.
+The coded software is accessible with source codes at http://code.google.com/p/rjimage/. For the compilation and correct work it needs at least Java 1.5 and Ant 1.7 installed at system. So far it correctly works with any image, but there is some problems with converting any image that not in the grayscale (byte for pixel). I think because I lost luminance factor when converting into grayscale. Baisically the software does conversion of any color space image into grayscale by itself. The demo software demonstrates the the ICM algorithm, Gibbs sampler and Metropolis-Hasting sampler. The RJMCMC methos as I have mentioned is almost done, I am stuck figuring out those acceptance probability calculationused , once it would be done the joy of running RJMCMC algorithm would be provided to community.
 
 % you can choose not to have a title for an appendix
 % if you want by leaving the argument blank
