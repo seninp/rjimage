@@ -659,7 +659,7 @@ public class ImageFactory extends Observable implements Runnable {
   }
 
   public void metropolisSampler() {
-
+    Long startTime = System.currentTimeMillis();
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
     Integer no_regions = this.classes.keySet().size();
@@ -723,10 +723,20 @@ public class ImageFactory extends Observable implements Runnable {
     setChanged();
     notifyObservers("Metropolis sampler finished at iteration " + iterationsCounter
         + " with energy: " + currentEnergy + ".");
+    Long endTime = System.currentTimeMillis();
+    Long totalTime = endTime - startTime;
+    Integer hours = Math.round(totalTime / 3600000);
+    Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
+    Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
+
+    setChanged();
+    notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
+        + " sec.\n");
+
   }
 
   public void icm() {
-
+    Long startTime = System.currentTimeMillis();
     Integer height = this.raster.length;
     Integer width = this.raster[0].length;
 
@@ -772,6 +782,16 @@ public class ImageFactory extends Observable implements Runnable {
     setChanged();
     notifyObservers("ICM algorithm finished at " + iterationsCounter + " iteration, T: " + temp
         + " energy: " + currentEnergy + ".");
+    Long endTime = System.currentTimeMillis();
+    Long totalTime = endTime - startTime;
+    Integer hours = Math.round(totalTime / 3600000);
+    Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
+    Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
+
+    setChanged();
+    notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
+        + " sec.\n");
+
 
   }
 
