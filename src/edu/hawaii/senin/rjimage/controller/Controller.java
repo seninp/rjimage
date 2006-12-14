@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
@@ -18,7 +20,7 @@ import edu.hawaii.senin.rjimage.utils.ImageFilter;
 import edu.hawaii.senin.rjimage.utils.ImagePreview;
 import edu.hawaii.senin.rjimage.view.View;
 
-public class Controller {
+public class Controller extends Observable {
 
   private ImageFactory imageFactory;
 
@@ -29,6 +31,7 @@ public class Controller {
   public Controller(ImageFactory imageFactory, View view) {
     this.imageFactory = imageFactory;
     imageFactory.addObserver(view);
+    this.addObserver(imageFactory);
     this.view = view;
     view.addLoadListener(new ImageLoadListener());
     view.addSaveListener(new ImageSaveListener());
@@ -164,7 +167,9 @@ public class Controller {
 
   private class StopSimulationListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      view.addToLog("THIS FUNCTION IS NOT YET IMPLEMENTED");
+      setChanged();
+      notifyObservers("stop");
+      view.addToLog("Stopping thread!");
     }
   }
 

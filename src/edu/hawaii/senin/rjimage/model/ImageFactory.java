@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Observable;
+import java.util.Observer;
 import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
@@ -26,6 +27,8 @@ import org.apache.commons.math.MathException;
 import org.apache.commons.math.random.RandomDataImpl;
 import org.apache.commons.math.special.Beta;
 
+import edu.hawaii.senin.rjimage.controller.Controller;
+
 /**
  * This is the main class for the Reversible Jump Image Segmentation. The work based on the Zoltan
  * Kato articles concerning image segmentation problem.
@@ -33,7 +36,7 @@ import org.apache.commons.math.special.Beta;
  * @author Pavel Senin.
  * 
  */
-public class ImageFactory extends Observable implements Runnable {
+public class ImageFactory extends Observable implements Runnable, Observer {
   /**
    * File name holder.
    */
@@ -84,6 +87,8 @@ public class ImageFactory extends Observable implements Runnable {
 
   private String method;
 
+  private boolean stopSimulation;
+
   private short[][] splitRaster;
   private Integer[][] splitLabels;
   private TreeMap<Integer, IClass> splitClasses;
@@ -103,13 +108,18 @@ public class ImageFactory extends Observable implements Runnable {
     else {
       this.classes = new TreeMap<Integer, IClass>();
     }
-    this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(1), new IClass(0.3, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(2), new IClass(0.4, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(3), new IClass(0.5, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(4), new IClass(0.6, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(5), new IClass(0.7, 0.1, 0.2));
-    this.classes.put(Integer.valueOf(6), new IClass(0.9, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(1), new IClass(0.3, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(2), new IClass(0.4, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(3), new IClass(0.5, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(4), new IClass(0.6, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(5), new IClass(0.7, 0.1, 0.2));
+    // this.classes.put(Integer.valueOf(6), new IClass(0.9, 0.1, 0.2));
+
+    this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.2, 0.2));
+    this.classes.put(Integer.valueOf(1), new IClass(0.4, 0.2, 0.2));
+    this.classes.put(Integer.valueOf(2), new IClass(0.6, 0.2, 0.2));
+    this.classes.put(Integer.valueOf(3), new IClass(0.8, 0.2, 0.2));
 
     // this.classes.put(Integer.valueOf(0), new IClass(0.2, 0.1, 0.2));
     // this.classes.put(Integer.valueOf(1), new IClass(0.5, 0.1, 0.2));
@@ -640,6 +650,10 @@ public class ImageFactory extends Observable implements Runnable {
       this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
+
+      if (this.stopSimulation) {
+        iterationsCounter = 100000;
+      }
     }
     Long endTime = System.currentTimeMillis();
     if (print) {
@@ -719,6 +733,10 @@ public class ImageFactory extends Observable implements Runnable {
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
 
+      if (this.stopSimulation) {
+        iterationsCounter = 100000;
+      }
+
     }// while
     setChanged();
     notifyObservers("Metropolis sampler finished at iteration " + iterationsCounter
@@ -792,10 +810,14 @@ public class ImageFactory extends Observable implements Runnable {
     notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
         + " sec.\n");
 
+    if (this.stopSimulation) {
+      iterationsCounter = 100000;
+    }
 
   }
 
   public void run() {
+    this.stopSimulation = false;
     if (this.method.equalsIgnoreCase("icm")) {
       icm();
     }
@@ -927,6 +949,10 @@ public class ImageFactory extends Observable implements Runnable {
       this.image = generateSegmentedImage();
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
+
+      if (this.stopSimulation) {
+        iterationsCounter = 100000;
+      }
 
     }// while
   }
@@ -1364,6 +1390,15 @@ public class ImageFactory extends Observable implements Runnable {
         doubletons += mergeDoubleton(i, j, cls);
       }
     return singletons + doubletons / 2;
+  }
+
+  public void update(Observable o, Object arg) {
+    if ((o instanceof Controller) && (arg instanceof String)) {
+      if ("stop".equalsIgnoreCase((String) arg)) {
+        this.stopSimulation = true;
+      }
+    }
+
   }
 
 }
