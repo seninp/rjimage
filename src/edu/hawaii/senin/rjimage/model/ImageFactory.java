@@ -1,6 +1,5 @@
 package edu.hawaii.senin.rjimage.model;
 
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.color.ColorSpace;
@@ -71,7 +70,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
   /**
    * Holds beta value.
    */
-  private Double beta = 2.5D;
+  private Double beta = 0.9D;
   /**
    * Starting temperature
    */
@@ -351,12 +350,12 @@ public class ImageFactory extends Observable implements Runnable, Observer {
    * @return singleton energy.
    */
   private Double singleton(Integer i, Integer j, Integer label) {
-    Double m = this.classes.get(label).getMean();
-    Double s = this.classes.get(label).getStDev();
+    Double m = this.classes.get(label).getMean() * 255;
+    Double s = this.classes.get(label).getStDev() * 255;
+    Double val = ((Short) this.originalRaster[i][j]).doubleValue();
     // return log(sqrt(2.0*3.141592653589793*variance[label])) +
     // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
-    return Math.log(Math.sqrt(2.0 * Math.PI * s))
-        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
+    return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
   /**
@@ -369,12 +368,12 @@ public class ImageFactory extends Observable implements Runnable, Observer {
    */
 
   private Double splitSingleton(Integer i, Integer j, Integer label) {
-    Double m = this.splitClasses.get(label).getMean();
-    Double s = this.splitClasses.get(label).getStDev();
+    Double m = this.splitClasses.get(label).getMean() * 255;
+    Double s = this.splitClasses.get(label).getStDev() * 255;
+    Double val = ((Short) this.originalRaster[i][j]).doubleValue();
     // return log(sqrt(2.0*3.141592653589793*variance[label])) +
     // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
-    return Math.log(Math.sqrt(2.0 * Math.PI * s))
-        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
+    return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
   /**
@@ -387,12 +386,12 @@ public class ImageFactory extends Observable implements Runnable, Observer {
    */
 
   private Double mergeSingleton(Integer i, Integer j, Integer label) {
-    Double m = this.mergeClasses.get(label).getMean();
-    Double s = this.mergeClasses.get(label).getStDev();
+    Double m = this.splitClasses.get(label).getMean() * 255;
+    Double s = this.splitClasses.get(label).getStDev() * 255;
+    Double val = ((Short) this.originalRaster[i][j]).doubleValue();
     // return log(sqrt(2.0*3.141592653589793*variance[label])) +
     // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
-    return Math.log(Math.sqrt(2.0 * Math.PI * s))
-        + Math.pow(this.originalRaster[i][j] / 255D - m, 2) / (2.0 * s);
+    return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
   /**

@@ -26,8 +26,6 @@ public class Controller extends Observable {
 
   private View view;
 
-  private ArrayList<Thread> threads = new ArrayList<Thread>();
-
   public Controller(ImageFactory imageFactory, View view) {
     this.imageFactory = imageFactory;
     imageFactory.addObserver(view);
