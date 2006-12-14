@@ -48,6 +48,8 @@ public class View implements Observer {
   private JTextField temperatureTextField = new JTextField("6.0");
   private JLabel coolingScheduleLabel = new JLabel("Temperature schedule");
   private JTextField coolingScheduleTextField = new JTextField("0.98");
+  private JLabel betaLabel = new JLabel("Beta parameter:");
+  private JTextField betaTextField = new JTextField("0.9");
   private JLabel gaussian1Mean = new JLabel("Class1 mean");
   private JTextField gaussian1MeanField = new JTextField("0.2");
   private JLabel gaussian1Stdev = new JLabel("Class1 stdev");
@@ -111,7 +113,7 @@ public class View implements Observer {
   public void addLoadListener(ActionListener listener) {
     loadImageButton.addActionListener(listener);
   }
-  
+
   public void addSaveListener(ActionListener listener) {
     saveImageButton.addActionListener(listener);
   }
@@ -146,7 +148,8 @@ public class View implements Observer {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     // set the layout for the application
-    MigLayout layout = new MigLayout("", "[center, fill, grow]10[center, fill, grow]", "[fill, grow][][][fill, grow]");
+    MigLayout layout = new MigLayout("", "[center, fill, grow]10[center, fill, grow]",
+        "[fill, grow][][][fill, grow]");
     this.frame.getContentPane().setLayout(layout);
 
     // original Image display panel
@@ -162,13 +165,16 @@ public class View implements Observer {
     this.frame.getContentPane().add(parametersPane, "grow, span 2, wrap");
     parametersPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
     MigLayout staticLayout = new MigLayout("fillx", "[left][grow,fill]unrel[left][grow,fill]",
-        "[][]20[][][][]");
+        "[][][][][][][]");
     this.parametersPane.setLayout(staticLayout);
     this.parametersPane.add(new JLabel("Temperature settings:"), "span 2,wrap");
     this.parametersPane.add(temperatureLabel, "");
     this.parametersPane.add(temperatureTextField, "");
     this.parametersPane.add(coolingScheduleLabel, "");
     this.parametersPane.add(coolingScheduleTextField, "wrap");
+
+    this.parametersPane.add(betaLabel, "");
+    this.parametersPane.add(betaTextField, "wrap");
 
     this.parametersPane.add(gaussian1Mean, "");
     this.parametersPane.add(gaussian1MeanField, "");
@@ -199,7 +205,7 @@ public class View implements Observer {
 
     // add save image button
     buttonsPane.add(saveImageButton);
-    
+
     // add load image button
     buttonsPane.add(startICMButton);
 
@@ -332,7 +338,7 @@ public class View implements Observer {
     Double s4 = Double.valueOf(this.gaussian4StdevField.getText());
     boolean valid = false;
     Integer classNum = 0;
-    
+
     if ((m1.equals(0D)) || (s1.equals(0D))) {
       this.logTextArea.append("Class 1 data is invalid, will go over\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
@@ -369,16 +375,34 @@ public class View implements Observer {
     }
     else {
       res.put(classNum, new IClass(m4, s4, 0D));
-      classNum+= 1;
+      classNum += 1;
       valid = true;
     }
-    
-    if(valid){
+
+    if (valid) {
       return res;
-    }else{
+    }
+    else {
       this.logTextArea.append("Horrible death of sampler: All classes are invalid!!!!\n");
       this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
     }
     return null;
+  }
+
+  /**
+   * Reports beta parameter value.
+   * 
+   * @return beta parameter.
+   */
+  public Double getBeta() {
+    Double beta = Double.valueOf(this.betaTextField.getText());
+    if ((beta.equals(0D)) || (beta.equals(0D))) {
+      this.logTextArea.append("Beta is invalid, will go over\n");
+      this.logTextArea.setCaretPosition(this.logTextArea.getDocument().getLength());
+    }
+    else {
+      return beta;
+    }
+    return 0.9;
   }
 }

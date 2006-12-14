@@ -96,6 +96,7 @@ public class Controller extends Observable {
       imageFactory.setMethod("gibbs");
       imageFactory.setStartTemperature(view.getStartTemperature());
       imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      imageFactory.setBeta(view.getBeta());
       TreeMap<Integer, IClass> classes = view.getClasses();
       if (null == classes) {
         assert true;
@@ -114,6 +115,7 @@ public class Controller extends Observable {
       imageFactory.setMethod("icm");
       imageFactory.setStartTemperature(view.getStartTemperature());
       imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      imageFactory.setBeta(view.getBeta());
       TreeMap<Integer, IClass> classes = view.getClasses();
       if (null == classes) {
         assert true;
@@ -132,6 +134,7 @@ public class Controller extends Observable {
       imageFactory.setMethod("metropolis");
       imageFactory.setStartTemperature(view.getStartTemperature());
       imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      imageFactory.setBeta(view.getBeta());
       TreeMap<Integer, IClass> classes = view.getClasses();
       if (null == classes) {
         assert true;
@@ -150,6 +153,7 @@ public class Controller extends Observable {
       imageFactory.setMethod("rjmcmc");
       imageFactory.setStartTemperature(view.getStartTemperature());
       imageFactory.setCoolingSchedule(view.getCoolingSchedule());
+      imageFactory.setBeta(view.getBeta());
       TreeMap<Integer, IClass> classes = view.getClasses();
       if (null == classes) {
         assert true;

@@ -1400,4 +1400,13 @@ public class ImageFactory extends Observable implements Runnable, Observer {
 
   }
 
+  /**
+   * Sets beta parameter.
+   * 
+   * @param beta2 value to set.
+   */
+  public void setBeta(Double beta2) {
+    this.beta = beta2;
+  }
+
 }
