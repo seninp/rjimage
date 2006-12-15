@@ -353,8 +353,6 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     Double m = this.classes.get(label).getMean() * 255;
     Double s = this.classes.get(label).getStDev() * 255;
     Double val = ((Short) this.originalRaster[i][j]).doubleValue();
-    // return log(sqrt(2.0*3.141592653589793*variance[label])) +
-    // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
     return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
@@ -371,8 +369,6 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     Double m = this.splitClasses.get(label).getMean() * 255;
     Double s = this.splitClasses.get(label).getStDev() * 255;
     Double val = ((Short) this.originalRaster[i][j]).doubleValue();
-    // return log(sqrt(2.0*3.141592653589793*variance[label])) +
-    // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
     return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
@@ -389,8 +385,6 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     Double m = this.splitClasses.get(label).getMean() * 255;
     Double s = this.splitClasses.get(label).getStDev() * 255;
     Double val = ((Short) this.originalRaster[i][j]).doubleValue();
-    // return log(sqrt(2.0*3.141592653589793*variance[label])) +
-    // pow((double)in_image_data[i][j]-mean[label],2)/(2.0*variance[label]);
     return Math.log(Math.sqrt(2.0 * Math.PI * s)) + Math.pow(val - m, 2) / (2.0 * s);
   }
 
@@ -422,7 +416,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       else
         energy += beta;
     }
-    if (i != 0) // nord
+    if (i != 0) // north
     {
       if (label == this.labels[i - 1][j])
         energy -= beta;
@@ -467,7 +461,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       else
         energy += beta;
     }
-    if (i != 0) // nord
+    if (i != 0) // north
     {
       if (label == this.splitLabels[i - 1][j])
         energy -= beta;
@@ -512,7 +506,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       else
         energy += beta;
     }
-    if (i != 0) // nord
+    if (i != 0) // north
     {
       if (label == this.mergeLabels[i - 1][j])
         energy -= beta;
@@ -707,9 +701,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
                 % no_regions;
             rnd = randGen.nextUniform(0D, 1D);
             kszi = Math.log(rnd);
-            /*
-             * Accept the new label according to Metropolis dynamics.
-             */
+            // Accept the new label according to Metropolis dynamics.
             if (kszi <= (getLocalEnergy(i, j, this.labels[i][j]) - getLocalEnergy(i, j, r)) / temp) {
               deltaEnergy = deltaEnergy
                   + Math.abs(getLocalEnergy(i, j, r) - getLocalEnergy(i, j, labels[i][j]));
