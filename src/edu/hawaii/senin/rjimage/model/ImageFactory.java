@@ -862,9 +862,9 @@ public class ImageFactory extends Observable implements Runnable, Observer {
 
       // ######## MOVE 2.
       // we choose class to split by uniform distribution.
-      Double rnd = randGen.nextUniform(0D, 1D);
+      Double rnd = randGen.nextUniform(0D, 0.99999D);
       Double PSplitSelect = 1D / ((Integer) this.classes.size()).doubleValue();
-      Integer class2Split = ((Long) Math.round((Double) (rnd / PSplitSelect))).intValue();
+      Integer class2Split = ((Double) (rnd / PSplitSelect)).intValue();
 
       // we choose classes by minimal Minkovsky distance
       Integer class2Merge1 = 0;
@@ -911,7 +911,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
         e.printStackTrace();
       }
 
-      if ((pSplit > 0) && (pMerge > 0)) {
+      if ((pSplit > 0D) && (pMerge > 0D)) {
 
         IClass mergeClass = rjmcmcSelect2Merge(this.classes.get(class2Merge1), this.classes
             .get(class2Merge2));
@@ -935,6 +935,22 @@ public class ImageFactory extends Observable implements Runnable, Observer {
         }
 
       }
+      else if ((pSplit > 0D) && (pMerge == 0D)) {
+        ArrayList<IClass> splitClasses = rjmcmcSelect2Split(class2Split, u1_beta, u2_beta, u3_beta);
+        rjmcmcDoSplit(class2Split, splitClasses, randGen);
+        rjmcmcKeepSplit();
+        setChanged();
+        notifyObservers("Keeping SPLIT\n");
+      }
+      else {
+        IClass mergeClass = rjmcmcSelect2Merge(this.classes.get(class2Merge1), this.classes
+            .get(class2Merge2));
+        rjmcmcDoMerge(mergeClass, class2Merge1, class2Merge2);
+        rjmcmcKeepMerge();
+        setChanged();
+        notifyObservers("Keeping MERGE\n");
+      }
+
       currentEnergy = getGlobalEnergy();
       deltaEnergy = Math.abs(oldEnergy - currentEnergy);
       oldEnergy = currentEnergy;
@@ -1000,9 +1016,10 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     Integer classNum = 0;
     Integer newMergeClassLabel = 0;
     TreeMap<Integer, Integer> labelsReMapping = new TreeMap<Integer, Integer>();
+
     for (Integer cls : this.classes.keySet()) {
       if (class2Merge1.equals(cls)) {
-        this.mergeClasses.remove(class2Merge1);
+        // this.mergeClasses.remove(class2Merge1);
         this.mergeClasses.put(classNum, mergeClass);
         newMergeClassLabel = classNum;
         classNum++;
@@ -1044,7 +1061,6 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       this.splitClasses.clear();
     }
     Integer label1 = class2Split;
-    Integer label2 = -1;
     for (Integer cls : this.classes.keySet()) {
       if (label1.equals(cls)) {
         this.splitClasses.put(label1, splitClasses.get(0));
@@ -1053,7 +1069,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
         this.splitClasses.put(cls, this.classes.get(cls));
       }
     }
-    label2 = this.splitClasses.size();
+    Integer label2 = this.splitClasses.size();
     this.splitClasses.put(label2, splitClasses.get(1));
 
     Integer height = this.raster.length;
@@ -1109,6 +1125,10 @@ public class ImageFactory extends Observable implements Runnable, Observer {
    */
   private ArrayList<IClass> rjmcmcSelect2Split(Integer class2Split, Double u1_beta, Double u2_beta,
       Double u3_beta) {
+
+    setChanged();
+    notifyObservers("######## Class to split:" + class2Split + " this.classes size "
+        + this.classes.size() + " " + this.classes.keySet());
 
     Double m_old = this.classes.get(class2Split).getMean();
     Double l_old = this.classes.get(class2Split).getStDev();
@@ -1283,7 +1303,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
 
   private IClass rjmcmcSelect2Merge(IClass class1, IClass class2) {
     Double newMean = (class1.getMean() + class2.getMean()) / 2;
-    Double newSigma = (class1.getStDev() + class2.getStDev());
+    Double newSigma = (class1.getStDev() + class2.getStDev()) / 2;
     Double newP = class1.getWeight() + class2.getWeight();
     // public IClass(Double mean, Double stdev, Double weight) {
     return new IClass(newMean, newSigma, newP);
