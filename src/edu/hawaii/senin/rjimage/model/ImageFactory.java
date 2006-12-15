@@ -787,6 +787,11 @@ public class ImageFactory extends Observable implements Runnable, Observer {
 
       setChanged();
       notifyObservers(ImageFactoryStatus.NEW_SEGMENTATION);
+      
+      if (this.stopSimulation) {
+        iterationsCounter = 100000;
+      }
+      
     }
     setChanged();
     notifyObservers("ICM algorithm finished at " + iterationsCounter + " iteration, T: " + temp
@@ -801,9 +806,6 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
         + " sec.\n");
 
-    if (this.stopSimulation) {
-      iterationsCounter = 100000;
-    }
 
   }
 
@@ -841,6 +843,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
     Double deltaEnergyMin = 0.01;
 
     Integer iterationsCounter = 0;
+    Long startTime = System.currentTimeMillis();
     // stop when energy change is small
     while ((deltaEnergy > deltaEnergyMin) && (iterationsCounter < 20000)) {// stop when energy
 
@@ -962,6 +965,22 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       }
 
     }// while
+    
+    Double currentEnergy = getGlobalEnergy();
+    setChanged();
+    notifyObservers("RJMCMC algorithm finished at " + iterationsCounter + " iteration, T: " + temp
+        + " energy: " + currentEnergy + ".\n");
+    Long endTime = System.currentTimeMillis();
+    Long totalTime = endTime - startTime;
+    Integer hours = Math.round(totalTime / 3600000);
+    Integer minutes = Math.round((totalTime - 3600000 * hours) / 60000);
+    Integer seconds = Math.round((totalTime - 3600000 * hours - 60000 * minutes) / 1000);
+
+    setChanged();
+    notifyObservers("Total time consumed " + hours + " hours, " + minutes + " min., " + seconds
+        + " sec.\n");
+
+    
   }
 
   private void rjmcmcKeepMerge() {
@@ -1119,7 +1138,7 @@ public class ImageFactory extends Observable implements Runnable, Observer {
       Double u3_beta) {
 
     setChanged();
-    notifyObservers("######## Class to split:" + class2Split + " this.classes size "
+    notifyObservers("  ## Class to split:" + class2Split + " this.classes size "
         + this.classes.size() + " " + this.classes.keySet());
 
     Double m_old = this.classes.get(class2Split).getMean();
