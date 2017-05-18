@@ -1,129 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-<title>Untitled Document</title>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-</head>
+# RJimage class project
 
-<body>
-<h1>RJimage project.</h1>
-<p>The fancy name <strong>RJimage</strong> came from <strong>R</strong>eversible 
-  <strong>J</strong>ump Markov Chain MonteCarlo <strong>Image </strong>segmentation.<br>
-  The whole thing based on Zoltan Kato article:<br>
-  <strong>Z.Kato <em>&quot;Bayesian color image segmentation using reversible 
-  jump Markov chain Monte Carlo&quot;</em><br>
-  Probability, Networks and Algorithms, February, 28, 1999. CWI, Amsterdam.</strong></p>
-<p><strong>Author: Pavel Senin.<a href="mailto:senin@hawaii.edu">senin at hawaii 
-  edu</a></strong></p>
-<p>This file introduces you to the major components of this software package. It includes information on the
-contents of the package you have downloaded, instructions on how to install the system, basic invocation and 
-usage, user documentation, developer documentation, and contact coordinates for further information.</p>
+The work follows publication by Z. Kato 
+_Bayesian color image segmentation using reversible jump Markov chain Monte Carlo_, 
+Probability, Networks and Algorithms, February, 28, 1999. CWI, Amsterdam.
 
-<h2>A. Contents of this package</h2>
-		
-<table width="90%" border="1">
-  <tr> 
-    <th align="center" valign="top" width="93">Directory/File 
-    <th valign="top" width="626">Contents 
-  <tr> 
-    <td align="center" valign="top" width="93">. 
-    <td valign="top" width="626"> Top-level directory files include:: 
-      <ul>
-        <li> README.html (this document) 
-        <li>analyze.build.xml (a verify and reporting build target.) 
-        <li> build.xml (contains basic build targets and property definitions) 
-        <li> dist.build.xml (creates a distribution package) 
-        <li> junit.build.xml (runs junit) 
-        <li> emma.build.xml (runs emma) 
-        <li>there may also be other *.build.xml files.&nbsp;</li>
-      </ul>
-  <tr> 
-    <td align="center" valign="top" width="93">./lib 
-    <td valign="top" width="626">Contains data files used to build and/or run 
-      the system: 
-      <ul>
-        <li>checkstyle/checkstyle.modules.xml&nbsp;&nbsp; contains checkstyle 
-          customizations.</li>
-        <li>pmd/pmd.rulesets.xml contains pmd customizations</li>
-        <li>findbugs/findbugs.rulesets.xml contains findbugs customizations.</li>
-        <li>commons/commons-math-1.1.jar contains Jakarta Common Math library.</li>
-        <li>swingmiglayout/swingmiglayout15.jar contains SWING MIG layout library 
-          for GUI build.</li>
-      </ul>
-  <tr> 
-    <td align="center" valign="top" width="93">./doc 
-    <td valign="top" width="626">Contains developer documentation including: 
-      <ul>
-        <li><a href="doc/LicenseInfo.html">LicenseInfo.html</a> provides licenses 
-          for use of all software included with this system.</li>
-        <li><a href="doc/History.html">History.html</a> provides a chronological 
-          record of the releases of this system.</li>
-      </ul></tr>
-  <tr> 
-    <td align="center" valign="top" width="93">./src 
-    <td valign="top" width="626">Contains the source files. 
-  <tr> 
-    <td align="center" valign="top" width="93">./build 
-    <td valign="top" width="626">Contains various products of the build process, 
-      including: 
-      <ul>
-        <li>junit/: Contains output from the JUnit tests, created by 'ant -f junit.build.xml'</li>
-        <li>jar/: Contains the application built, created by 'ant -f jar.build.xml'</li>
-        <li>dist/ Contains any distributions built during development.</li>
-      </ul>
-      <p>These links won't work until their corresponding ant target has been 
-        executed. 
-  <tr>
-    <td align="center" valign="top">./data
-    <td valign="top">Contains test images.
-</table>
+## Build the package using Ant
 
-<p>&nbsp;</p>
-<h2>B. Basic Installation</h2> </h2>
-<p>These instructions assume that you have unzipped the zip file containing this 
-  system to create a directory containing the system components.</p>
-<p> A note to Unix users: due to a bug in java.util.zip, the directory permissions 
-  are munged if you unzip in Unix, and you won't be able to cd into interior directories.&nbsp;<br>
-  To fix this, invoke the following from the parent directory of this system: 
-  chmod -R a+x &lt;system directory&gt;.&nbsp;</p>
+`ant jar`
 
-<h3>B1: Install Java 1.5</h3>
+ - analyze.build.xml (a verify and reporting build target.) 
+ - build.xml (contains basic build targets and property definitions) 
+ - dist.build.xml (creates a distribution package) 
+ - junit.build.xml (runs junit) 
+ - emma.build.xml (runs emma) 
+ - there may also be other *.build.xml files.&nbsp;
 
-  <ul>
-    <li>Install the Java JDK (the full JDK, not just the JRE) by following the
-      instructions at <a href="http://java.sun.com">http://java.sun.com</a>.</li>
-    <li>Set the JAVA_HOME environment variable to point to your Java
-      installation (for example, <a href="file:///c:/java/jdk1.5.0_08">c:\java\jdk1.5.0_08</a>)</li>
-    <li>Add JAVA_HOME/bin to your PATH variable.&nbsp;</li>
-  </ul>
-  <h3>B2: Install Ant 1.7</h3>
-  <ul>
-    <li>Download and unzip apache-ant-1.7.0Beta1.zip (or later) from <a href="http://ant.apache.org/">http://ant.apache.org/</a>.&nbsp;</li>
-    <li>Set the ANT_HOME environment variable to point to your Ant installation
-      (for example, <a href="file:///c:/apache-ant-1.7.0Beta1">c:\apache-ant-1.7.0Beta1</a>)</li>
-    <li>Add ANT_HOME/bin to your PATH variable.&nbsp;</li>
-  </ul>
-  
-<h3>B3: Configure Eclipse for &quot;hacking&quot; the system</h3>
-<ul>
-    
-  <li>Under Window | Preferences | Java | Build Path | Classpath Variables, create 
-    three new Classpath Variables called COMMONMATH_HOME, The values of these 
-    classpath variables should be the same as their corresponding environment 
-    variables.&nbsp;</li>
-    <li>After you have done this, you should be able to import this project into
-      your Eclipse workspace without error.&nbsp;</li>
-  </ul>
+## Used libraries and other files :
+ - checkstyle/checkstyle.modules.xml contains checkstyle customizations
+ - pmd/pmd.rulesets.xml contains pmd customizations
+ - findbugs/findbugs.rulesets.xml contains findbugs customizations
+ - commons/commons-math-1.1.jar contains Jakarta Common Math library
+ - swingmiglayout/swingmiglayout15.jar contains SWING MIG layout library for GUI buildant jar&quot;</p>
 
-<h2>C. Invocation</h2>  
-<h3>C1: Basic compilation</h3>
-<p>To perform a basic compilation, invoke &quot;ant&quot;</p>
-<h3>C2: System build</h3>
-<p>To build the executable jar, invoke &quot;ant jar&quot;</p>
-<p><strong>Please find your jar in the folder build/jar</strong></p>
-<h3>C3: System run</h3>
-<p>To run the demo yiu need, to go into build/jar folder and invoke the demo by 
-  &quot;java -jar rjimage-demo.jar&quot;</p>
-
-		</body>
-</html>
+## Running
+`java -jar rjimage-demo.jar`
